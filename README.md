@@ -79,7 +79,6 @@ Preferred communication style: Simple, everyday language.
 - **Vite**: Frontend bundling with React plugin
 - **esbuild**: Server bundling for production
 - **tsx**: TypeScript execution for development
-- **Replit plugins**: Dev banner, cartographer, and runtime error overlay
 
 ### Form & Validation
 - **React Hook Form**: Form state management
