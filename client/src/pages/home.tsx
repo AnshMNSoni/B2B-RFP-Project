@@ -8,8 +8,8 @@ import PricingTable from '@/components/PricingTable';
 import HowItWorks from '@/components/HowItWorks';
 import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
+import { apiRequest } from '@/lib/queryClient';
 
-// todo: remove mock functionality - sample RFP data
 const SAMPLE_RFP = `RFP Title: Supply of Industrial Power Cables
 Due Date: 2025-03-15
 
@@ -20,65 +20,44 @@ Requirements:
 - Industrial grade
 - IS compliant`;
 
-// todo: remove mock functionality - mock result data
-const mockResult = {
-  summary: {
-    title: 'Supply of Industrial Power Cables',
-    dueDate: '2025-03-15',
-    voltage: '11kV',
-    material: 'Copper',
-    insulation: 'XLPE',
-    compliance: ['IS Compliant', 'Industrial Grade'],
-    requirements: [
-      'Copper conductor material',
-      'XLPE insulation type',
-      'Voltage rating: 11kV',
-      'Industrial grade specifications'
-    ]
-  },
-  matches: [
-    {
-      sku: 'CAB-11KV-CU-XLPE',
-      description: '11kV Copper XLPE insulated industrial cable',
-      matchPercentage: 100,
-      voltage: '11kV',
-      material: 'Copper',
-      insulation: 'XLPE',
-      basePrice: 1200
-    },
-    {
-      sku: 'CAB-11KV-CU-PVC',
-      description: '11kV Copper PVC insulated cable',
-      matchPercentage: 70,
-      voltage: '11kV',
-      material: 'Copper',
-      insulation: 'PVC',
-      basePrice: 1000
-    },
-    {
-      sku: 'CAB-6.6KV-AL-PVC',
-      description: '6.6kV Aluminium PVC cable',
-      matchPercentage: 40,
-      voltage: '6.6kV',
-      material: 'Aluminium',
-      insulation: 'PVC',
-      basePrice: 700
-    }
-  ],
-  pricing: [
-    {
-      sku: 'CAB-11KV-CU-XLPE',
-      description: '11kV Copper XLPE insulated industrial cable',
-      basePrice: 1200,
-      quantity: 100,
-      materialCost: 80000,
-      serviceCost: 5000,
-      testingCost: 2500,
-      totalCost: 207500
-    }
-  ],
-  grandTotal: 207500
-};
+interface RFPSummary {
+  title: string;
+  dueDate: string | null;
+  voltage: string | null;
+  material: string | null;
+  insulation: string | null;
+  compliance: string[];
+  requirements: string[];
+}
+
+interface SKUMatch {
+  sku: string;
+  description: string;
+  matchPercentage: number;
+  voltage: string;
+  material: string;
+  insulation: string;
+  basePrice: number;
+}
+
+interface PricingItem {
+  sku: string;
+  description: string;
+  basePrice: number;
+  quantity: number;
+  materialCost: number;
+  serviceCost: number;
+  testingCost: number;
+  totalCost: number;
+}
+
+interface RFPResult {
+  success: boolean;
+  summary: RFPSummary;
+  matches: SKUMatch[];
+  pricing: PricingItem[];
+  grandTotal: number;
+}
 
 interface AgentStep {
   id: string;
@@ -91,7 +70,7 @@ export default function Home() {
   const [rfpText, setRfpText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<typeof mockResult | null>(null);
+  const [result, setResult] = useState<RFPResult | null>(null);
   const [steps, setSteps] = useState<AgentStep[]>([
     { id: 'sales', name: 'Sales Agent', description: 'Extracting and summarizing RFP requirements', status: 'pending' },
     { id: 'technical', name: 'Technical Agent', description: 'Matching specifications with SKU catalog', status: 'pending' },
@@ -103,7 +82,6 @@ export default function Home() {
     setError(null);
   }, []);
 
-  // todo: remove mock functionality - simulate processing
   const processRFP = useCallback(async () => {
     if (!rfpText.trim()) {
       setError('Please enter RFP text');
@@ -117,41 +95,68 @@ export default function Home() {
     // Reset steps
     setSteps(prev => prev.map(s => ({ ...s, status: 'pending' as const })));
 
-    // Simulate Sales Agent processing
+    // Animate Sales Agent
     setSteps(prev => prev.map(s => 
       s.id === 'sales' ? { ...s, status: 'processing' as const } : s
     ));
-    await new Promise(r => setTimeout(r, 1500));
-    setSteps(prev => prev.map(s => 
-      s.id === 'sales' ? { ...s, status: 'completed' as const } : s
-    ));
 
-    // Simulate Technical Agent processing
-    setSteps(prev => prev.map(s => 
-      s.id === 'technical' ? { ...s, status: 'processing' as const } : s
-    ));
-    await new Promise(r => setTimeout(r, 1500));
-    setSteps(prev => prev.map(s => 
-      s.id === 'technical' ? { ...s, status: 'completed' as const } : s
-    ));
+    try {
+      // Call the real API
+      const response = await apiRequest('POST', '/api/process-rfp', { rfpText });
+      const data: RFPResult = await response.json();
 
-    // Simulate Pricing Agent processing
-    setSteps(prev => prev.map(s => 
-      s.id === 'pricing' ? { ...s, status: 'processing' as const } : s
-    ));
-    await new Promise(r => setTimeout(r, 1000));
-    setSteps(prev => prev.map(s => 
-      s.id === 'pricing' ? { ...s, status: 'completed' as const } : s
-    ));
+      // Animate through remaining steps quickly for visual feedback
+      setSteps(prev => prev.map(s => 
+        s.id === 'sales' ? { ...s, status: 'completed' as const } : s
+      ));
+      
+      await new Promise(r => setTimeout(r, 300));
+      setSteps(prev => prev.map(s => 
+        s.id === 'technical' ? { ...s, status: 'processing' as const } : s
+      ));
+      
+      await new Promise(r => setTimeout(r, 300));
+      setSteps(prev => prev.map(s => 
+        s.id === 'technical' ? { ...s, status: 'completed' as const } : s
+      ));
+      
+      await new Promise(r => setTimeout(r, 300));
+      setSteps(prev => prev.map(s => 
+        s.id === 'pricing' ? { ...s, status: 'processing' as const } : s
+      ));
+      
+      await new Promise(r => setTimeout(r, 300));
+      setSteps(prev => prev.map(s => 
+        s.id === 'pricing' ? { ...s, status: 'completed' as const } : s
+      ));
 
-    // Set result
-    setResult(mockResult);
-    setIsProcessing(false);
+      if (data.success) {
+        setResult(data);
+      } else {
+        setError('Failed to process RFP');
+      }
+    } catch (err) {
+      console.error('RFP processing error:', err);
+      setError('Failed to connect to server. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   }, [rfpText]);
 
   const dismissError = useCallback(() => {
     setError(null);
   }, []);
+
+  // Transform summary for component
+  const transformedSummary = result?.summary ? {
+    title: result.summary.title,
+    dueDate: result.summary.dueDate || 'Not specified',
+    voltage: result.summary.voltage || undefined,
+    material: result.summary.material || undefined,
+    insulation: result.summary.insulation || undefined,
+    compliance: result.summary.compliance,
+    requirements: result.summary.requirements
+  } : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -186,9 +191,9 @@ export default function Home() {
               <EmptyState />
             )}
 
-            {result && (
+            {result && transformedSummary && (
               <>
-                <RFPSummaryCard summary={result.summary} />
+                <RFPSummaryCard summary={transformedSummary} />
                 
                 <div>
                   <h2 className="text-lg font-semibold mb-4">Top SKU Matches</h2>
