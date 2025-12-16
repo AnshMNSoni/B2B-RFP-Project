@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export function serveStatic(app: Express) {
   // Vite build output
-  const distPath = path.resolve(__dirname, "../client/dist");
+  const distPath = path.resolve(__dirname, "../dist");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(

@@ -7,10 +7,8 @@ services:
 
     buildCommand: |
       npm install
-      cd client
-      npm install
       npm run build
-      cd ..
+      ls -la dist
 
     startCommand: npm start
 
