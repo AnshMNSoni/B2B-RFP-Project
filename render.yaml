@@ -2,12 +2,15 @@ services:
   - type: web
     name: rfp-agent-ai
     env: node
-    plan: free 
+    plan: free
     region: oregon
 
     buildCommand: |
       npm install
+      cd client
+      npm install
       npm run build
+      cd ..
 
     startCommand: |
       npm start
