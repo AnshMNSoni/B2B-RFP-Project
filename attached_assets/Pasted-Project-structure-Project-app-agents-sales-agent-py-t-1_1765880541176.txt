@@ -1,0 +1,582 @@
+Project structure
+Project/
+│
+├── app/
+│   ├── agents/
+│   │   ├── sales_agent.py
+│   │   ├── technical_agent.py
+│   │   ├── pricing_agent.py
+│   │
+│   ├── tools/
+│   │   ├── rfp_scraper_tool.py
+│   │   ├── sku_matching_tool.py
+│   │   ├── pricing_tool.py
+│   │
+│   ├── rfp-frontend/
+│   │   ├── App.tsx
+│
+├── main.py
+├── requirements.txt
+├── .gitignore
+
+pricing_agent.py
+
+from crewai import Agent
+from tools.pricing_tool import pricing_tool
+
+def pricing_agent():
+    return Agent(
+        role="Pricing Agent",
+        goal="Generate pricing",
+        backstory="Pricing specialist.",
+        tools=[pricing_tool],
+        llm="groq/llama-3.3-70b-versatile",  # Use string format
+        verbose=True
+    )
+
+
+sales_agent.py
+
+from crewai import Agent
+from tools.rfp_scraper_tool import rfp_scraper_tool
+
+def sales_agent():
+    return Agent(
+        role="Sales Agent",
+        goal="Extract and summarize RFPs",
+        backstory="Expert in RFP discovery.",
+        tools=[rfp_scraper_tool],
+        llm="groq/llama-3.3-70b-versatile",  # Use string format
+        verbose=True
+    )
+
+technical_agent.py
+
+from crewai import Agent
+from tools.sku_matching_tool import sku_matching_tool
+
+def technical_agent():
+    return Agent(
+        role="Technical Agent",
+        goal="Match specs with SKUs",
+        backstory="Expert in cable specifications.",
+        tools=[sku_matching_tool],
+        llm="groq/llama-3.3-70b-versatile",  # Use string format
+        verbose=True
+    )
+
+data/sample_rfp.txt
+
+RFP Title: Supply of Industrial Power Cables
+Due Date: 2025-03-15
+
+Requirements:
+- Copper conductor
+- XLPE insulation
+- Voltage rating: 11kV
+- Industrial grade
+- IS compliant
+
+data/sku_catalog.json
+
+[
+  {
+    "sku": "CAB-11KV-CU-XLPE",
+    "description": "11kV Copper XLPE insulated industrial cable",
+    "voltage": "11kV",
+    "material": "Copper",
+    "insulation": "XLPE",
+    "base_price": 1200
+  },
+  {
+    "sku": "CAB-6.6KV-AL-PVC",
+    "description": "6.6kV Aluminium PVC cable",
+    "voltage": "6.6kV",
+    "material": "Aluminium",
+    "insulation": "PVC",
+    "base_price": 700
+  },
+  {
+    "sku": "CAB-11KV-CU-PVC",
+    "description": "11kV Copper PVC insulated cable",
+    "voltage": "11kV",
+    "material": "Copper",
+    "insulation": "PVC",
+    "base_price": 1000
+  }
+]
+
+tools/pricing_tool.py
+
+from crewai.tools import tool
+
+@tool("Pricing Tool")
+def pricing_tool(sku_matches: str) -> str:
+    """
+    Dummy pricing model.
+    """
+    return f"Final Pricing:\n{sku_matches}"
+
+
+rfp_scraper_tool.py
+
+from crewai.tools import tool
+
+@tool("RFP Scraper Tool")
+def rfp_scraper_tool(rfp_text: str) -> str:
+    """
+    Reads and summarizes RFP content.
+    """
+    return f"Extracted RFP Content:\n{rfp_text}"
+
+sku_matching_tool.py
+
+import json
+from crewai.tools import tool
+
+@tool("SKU Matching Tool")
+def sku_matching_tool(rfp_text: str) -> str:
+    """
+    Matches RFP specs with SKU catalog.
+    """
+    with open("app/data/sku_catalog.json") as f:
+        skus = json.load(f)
+
+    results = []
+    for sku in skus:
+        score = 0
+        if sku["material"].lower() in rfp_text.lower():
+            score += 40
+        if sku["insulation"].lower() in rfp_text.lower():
+            score += 30
+        if sku["voltage"].lower() in rfp_text.lower():
+            score += 30
+
+        results.append({
+            "sku": sku["sku"],
+            "match_percentage": score,
+            "base_price": sku["base_price"]
+        })
+
+    results.sort(key=lambda x: x["match_percentage"], reverse=True)
+    return str(results[:3])
+
+api.py
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+from crewai import Crew, Task
+from agents.sales_agent import sales_agent
+from agents.technical_agent import technical_agent
+from agents.pricing_agent import pricing_agent
+
+load_dotenv()
+os.environ["OTEL_SDK_DISABLED"] = "true"
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/api/process-rfp', methods=['POST'])
+def process_rfp():
+    try:
+        data = request.json
+        rfp_text = data.get('rfp_text', '')
+        
+        if not rfp_text:
+            return jsonify({'error': 'RFP text is required'}), 400
+        
+        # Create tasks
+        sales_task = Task(
+    description=(
+        "Analyze the RFP text and extract structured requirements. "
+        "DO NOT ask questions. Proceed autonomously."
+    ),
+    agent=sales_agent(),
+    expected_output="Structured RFP summary in JSON."
+)
+
+        technical_task = Task(
+    description=(
+        "Match RFP specs to SKUs and return top 3 matches. "
+        "Proceed without user confirmation."
+    ),
+    agent=technical_agent(),
+    expected_output="JSON list of SKU matches."
+)
+        
+        pricing_task = Task(
+    description=(
+        "Generate pricing for the recommended SKU. "
+        "Return final pricing JSON."
+    ),
+    agent=pricing_agent(),
+    expected_output="Pricing JSON."
+)
+
+        
+        # Run crew
+        crew = Crew(
+            agents=[sales_agent(), technical_agent(), pricing_agent()],
+            tasks=[sales_task, technical_task, pricing_task],
+            verbose=False
+        )
+        
+        result = crew.kickoff()
+        
+        return jsonify({
+    "success": True,
+    "summary": result["summary"],
+    "matches": result["matches"],
+    "pricing": result["pricing"]
+})
+
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy'})
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+
+
+
+main.py
+
+import os
+from dotenv import load_dotenv
+from crewai import Crew, Task
+from agents.sales_agent import sales_agent
+from agents.technical_agent import technical_agent
+from agents.pricing_agent import pricing_agent
+
+# Load environment variables
+load_dotenv()
+
+# Disable CrewAI telemetry
+os.environ["OTEL_SDK_DISABLED"] = "true"
+
+# Set Groq API key for LiteLLM
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+
+with open("app/data/sample_rfp.txt") as f:
+    rfp_text = f.read()
+
+sales_task = Task(
+    description=f"Summarize and extract RFP details:\n{rfp_text}",
+    agent=sales_agent(),
+    expected_output="A clear summary of RFP requirements including voltage, material, insulation type, and compliance standards."
+)
+
+technical_task = Task(
+    description="Match RFP specs to SKUs using the summary from the sales agent.",
+    agent=technical_agent(),
+    expected_output="A list of top 3 matching SKUs with match percentages and base prices."
+)
+
+pricing_task = Task(
+    description="Generate pricing for recommended SKUs.",
+    agent=pricing_agent(),
+    expected_output="Final pricing breakdown for all recommended SKUs with total cost."
+)
+
+crew = Crew(
+    agents=[
+        sales_agent(),
+        technical_agent(),
+        pricing_agent()
+    ],
+    tasks=[
+        sales_task,
+        technical_task,
+        pricing_task
+    ],
+    verbose=True
+)
+
+result = crew.kickoff()
+print("\n===== FINAL RFP RESPONSE =====\n")
+print(result)
+
+
+rfp-frontend/App.tsx
+
+import React, { useState } from 'react';
+import { Upload, FileText, Zap, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+
+export default function RFPAgentApp() {
+  const [rfpText, setRfpText] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadSampleRFP = () => {
+    setRfpText(`RFP Title: Supply of Industrial Power Cables
+Due Date: 2025-03-15
+
+Requirements:
+- Copper conductor
+- XLPE insulation
+- Voltage rating: 11kV
+- Industrial grade
+- IS compliant`);
+  };
+
+  const processRFP = async () => {
+    if (!rfpText.trim()) {
+      setError('Please enter RFP text');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/process-rfp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rfp_text: rfpText })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // For now, mock the result structure
+        setResult(data);
+      } else {
+        setError(data.error || 'Processing failed');
+      }
+    } catch (err) {
+      setError('Failed to connect to server. Make sure Flask API is running on port 5000.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center gap-3">
+            <Zap className="w-8 h-8 text-blue-600" />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">RFP Agent AI</h1>
+              <p className="text-sm text-gray-600">Automated RFP Processing & Quote Generation</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Panel - Input */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  RFP Input
+                </h2>
+                <button
+                  onClick={loadSampleRFP}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Load Sample
+                </button>
+              </div>
+
+              <textarea
+                value={rfpText}
+                onChange={(e) => setRfpText(e.target.value)}
+                placeholder="Paste your RFP text here or click 'Load Sample' to see an example..."
+                className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+              />
+
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={processRFP}
+                  disabled={isProcessing || !rfpText.trim()}
+                  className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5" />
+                      Process RFP
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+            </div>
+
+            {/* How it works */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+              <h3 className="font-semibold text-gray-900 mb-3">How It Works</h3>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
+                  <div>
+                    <p className="font-medium text-gray-900">Sales Agent</p>
+                    <p className="text-sm text-gray-600">Extracts key requirements from RFP</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
+                  <div>
+                    <p className="font-medium text-gray-900">Technical Agent</p>
+                    <p className="text-sm text-gray-600">Matches specs with product catalog</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
+                  <div>
+                    <p className="font-medium text-gray-900">Pricing Agent</p>
+                    <p className="text-sm text-gray-600">Generates competitive pricing</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Results */}
+          <div className="space-y-6">
+            {result ? (
+              <>
+                {/* Summary */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    RFP Summary
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Voltage</p>
+                      <p className="font-semibold text-gray-900">{result.summary.voltage}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Material</p>
+                      <p className="font-semibold text-gray-900">{result.summary.material}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Insulation</p>
+                      <p className="font-semibold text-gray-900">{result.summary.insulation}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Grade</p>
+                      <p className="font-semibold text-gray-900">{result.summary.grade}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-gray-600">Compliance</p>
+                    <p className="font-semibold text-gray-900">{result.summary.compliance}</p>
+                  </div>
+                </div>
+
+                {/* Matches */}
+                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Product Matches</h2>
+                  <div className="space-y-3">
+                    {result.matches.map((match: any, index: number) => (
+                      <div
+                        key={match.sku}
+                        className={`p-4 rounded-lg border-2 ${
+                          index === 0 ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-semibold text-gray-900">{match.sku}</p>
+                            <p className="text-sm text-gray-600">{match.description}</p>
+                          </div>
+                          {index === 0 && (
+                            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                              BEST MATCH
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-full bg-gray-200 rounded-full h-2 w-24">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  match.matchPercentage >= 80 ? 'bg-green-600' : 
+                                  match.matchPercentage >= 50 ? 'bg-yellow-600' : 'bg-red-600'
+                                }`}
+                                style={{ width: `${match.matchPercentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700">
+                              {match.matchPercentage}%
+                            </span>
+                          </div>
+                          <p className="text-lg font-bold text-gray-900">₹{match.basePrice}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-lg p-6 border border-green-200">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Recommended Quote
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">SKU</span>
+                      <span className="font-semibold text-gray-900">{result.pricing.recommendedSKU}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Unit Price</span>
+                      <span className="font-semibold text-gray-900">₹{result.pricing.unitPrice}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Quantity</span>
+                      <span className="font-semibold text-gray-900">{result.pricing.quantity} units</span>
+                    </div>
+                    <div className="pt-3 border-t border-green-300 flex justify-between">
+                      <span className="text-lg font-bold text-gray-900">Total Estimate</span>
+                      <span className="text-2xl font-bold text-green-700">₹{result.pricing.estimatedTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <button className="w-full mt-4 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                    Generate Proposal PDF
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-12 border border-gray-100 text-center">
+                <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Results Yet</h3>
+                <p className="text-gray-600">
+                  Enter your RFP text and click "Process RFP" to see results
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+Once, I put the .txt file content as an input to the frontend, the backend is giving output on console but frontend is not giving output?
