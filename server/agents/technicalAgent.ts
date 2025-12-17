@@ -32,8 +32,8 @@ RFP Requirements:
 - Voltage: ${summary.voltage || "Not specified"}
 - Material: ${summary.material || "Not specified"}
 - Insulation: ${summary.insulation || "Not specified"}
-- Compliance: ${summary.compliance.join(", ") || "Not specified"}
-- Requirements: ${summary.requirements.join("; ") || "Not specified"}
+- Compliance: ${summary.compliance?.length ? summary.compliance.join(", ") : "Not specified"}
+- Requirements: ${summary.requirements?.length ? summary.requirements.join("; ") : "Not specified"}
 
 Available SKU Catalog:
 ${JSON.stringify(SKU_CATALOG, null, 2)}
@@ -70,6 +70,7 @@ Sort by match percentage descending.`
     const data = await response.json();
     
     if (!data.candidates || !data.candidates[0]) {
+      console.error("Gemini API response:", JSON.stringify(data));
       throw new Error("No response from Gemini API");
     }
 

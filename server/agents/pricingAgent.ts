@@ -76,6 +76,7 @@ Respond ONLY with a JSON object in this exact format (no markdown, no backticks)
     const data = await response.json();
     
     if (!data.candidates || !data.candidates[0]) {
+      console.error("Gemini API response:", JSON.stringify(data));
       throw new Error("No response from Gemini API");
     }
 
@@ -134,6 +135,16 @@ Respond ONLY with a JSON object in this exact format (no markdown, no backticks)
  */
 function getFallbackPricing(matches: SKUMatch[]): { items: PricingItem[]; grandTotal: number; analysis: string } {
   const items: PricingItem[] = [];
+  
+  // Check if matches array is empty or invalid
+  if (!matches || matches.length === 0) {
+    return {
+      items: [],
+      grandTotal: 0,
+      analysis: "No SKU matches available for pricing"
+    };
+  }
+  
   const topMatch = matches[0];
   
   const quantity = 100;
