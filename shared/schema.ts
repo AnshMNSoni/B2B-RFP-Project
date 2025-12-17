@@ -7,7 +7,7 @@ export const skuItemSchema = z.object({
   voltage: z.string(),
   material: z.string(),
   insulation: z.string(),
-  basePrice: z.number(),
+  basePrice: z.number()
 });
 
 export type SKUItem = z.infer<typeof skuItemSchema>;
@@ -32,7 +32,7 @@ export const rfpSummarySchema = z.object({
 
 export type RFPSummary = z.infer<typeof rfpSummarySchema>;
 
-// Technical Agent Output - SKU Match
+// Technical Agent Output - SKU Match (with AI reasoning)
 export const skuMatchSchema = z.object({
   sku: z.string(),
   description: z.string(),
@@ -41,11 +41,12 @@ export const skuMatchSchema = z.object({
   material: z.string(),
   insulation: z.string(),
   basePrice: z.number(),
+  reasoning: z.string().optional(), // AI-generated reasoning for the match
 });
 
 export type SKUMatch = z.infer<typeof skuMatchSchema>;
 
-// Pricing Agent Output - Pricing Item
+// Pricing Agent Output - Pricing Item (with AI reasoning)
 export const pricingItemSchema = z.object({
   sku: z.string(),
   description: z.string(),
@@ -55,17 +56,19 @@ export const pricingItemSchema = z.object({
   serviceCost: z.number(),
   testingCost: z.number(),
   totalCost: z.number(),
+  reasoning: z.string().optional(), // AI-generated reasoning for quantity choice
 });
 
 export type PricingItem = z.infer<typeof pricingItemSchema>;
 
-// Complete RFP Response
+// Complete RFP Response (with AI analysis)
 export const rfpResponseSchema = z.object({
   success: z.boolean(),
   summary: rfpSummarySchema,
   matches: z.array(skuMatchSchema),
   pricing: z.array(pricingItemSchema),
   grandTotal: z.number(),
+  analysis: z.string().optional(), // AI-generated pricing strategy analysis
 });
 
 export type RFPResponse = z.infer<typeof rfpResponseSchema>;

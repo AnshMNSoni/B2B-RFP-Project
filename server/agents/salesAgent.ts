@@ -1,14 +1,100 @@
 import type { RFPSummary } from "@shared/schema";
 
 /**
- * Sales Agent - Extracts and summarizes RFP requirements
- * Parses the RFP text to extract key information like title, due date,
- * technical specifications, and compliance requirements.
+ * AI-Powered Sales Agent - Extracts and summarizes RFP requirements using Gemini AI
+ * Uses natural language understanding to parse RFP text intelligently
+ * API Key is read from environment variable GEMINI_API_KEY
  */
-export function runSalesAgent(rfpText: string): RFPSummary {
+export async function runSalesAgent(rfpText: string): Promise<RFPSummary> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY not found in environment variables");
+  }
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `You are a sales analyst extracting key information from an RFP for electrical cables.
+
+Analyze the following RFP text and extract:
+1. Title of the RFP
+2. Due date (in YYYY-MM-DD format if possible)
+3. Voltage rating (e.g., "11kV", "33kV", "LV")
+4. Material type (Copper or Aluminium)
+5. Insulation type (XLPE, PVC, etc.)
+6. Compliance standards mentioned (e.g., IS compliant, IEC, IEEE, etc.)
+7. Key technical requirements (as a list)
+
+RFP Text:
+${rfpText}
+
+Respond ONLY with a JSON object in this exact format (no markdown, no backticks):
+{
+  "title": "string",
+  "dueDate": "string or null",
+  "voltage": "string or null",
+  "material": "string or null",
+  "insulation": "string or null",
+  "compliance": ["string"],
+  "requirements": ["string"]
+}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 1000,
+          }
+        })
+      }
+    );
+
+    const data = await response.json();
+    
+    if (!data.candidates || !data.candidates[0]) {
+      throw new Error("No response from Gemini API");
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
+
+    // Parse the JSON response
+    const clean = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+
+    return {
+      title: parsed.title || "Untitled RFP",
+      dueDate: parsed.dueDate || null,
+      voltage: parsed.voltage || null,
+      material: parsed.material || null,
+      insulation: parsed.insulation || null,
+      compliance: Array.isArray(parsed.compliance) ? parsed.compliance : [],
+      requirements: Array.isArray(parsed.requirements) ? parsed.requirements : []
+    };
+  } catch (err) {
+    console.error("Sales Agent AI error:", err);
+    // Fallback to basic parsing
+    return fallbackParsing(rfpText);
+  }
+}
+
+/**
+ * Fallback parsing if AI fails
+ */
+function fallbackParsing(rfpText: string): RFPSummary {
   const lines = rfpText.split('\n').map(line => line.trim()).filter(Boolean);
   
-  // Extract title
   let title = "Untitled RFP";
   const titleLine = lines.find(line => 
     line.toLowerCase().includes('rfp title:') || 
@@ -19,7 +105,6 @@ export function runSalesAgent(rfpText: string): RFPSummary {
     title = titleLine.split(':').slice(1).join(':').trim() || title;
   }
 
-  // Extract due date
   let dueDate: string | null = null;
   const dateLine = lines.find(line => 
     line.toLowerCase().includes('due date:') || 
@@ -33,7 +118,6 @@ export function runSalesAgent(rfpText: string): RFPSummary {
     }
   }
 
-  // Extract voltage
   let voltage: string | null = null;
   const voltagePatterns = [
     /(\d+(?:\.\d+)?)\s*kv/i,
@@ -47,12 +131,10 @@ export function runSalesAgent(rfpText: string): RFPSummary {
       break;
     }
   }
-  // Check for low voltage
   if (!voltage && rfpText.toLowerCase().includes('low voltage')) {
     voltage = 'LV';
   }
 
-  // Extract material
   let material: string | null = null;
   if (rfpText.toLowerCase().includes('copper')) {
     material = 'Copper';
@@ -60,7 +142,6 @@ export function runSalesAgent(rfpText: string): RFPSummary {
     material = 'Aluminium';
   }
 
-  // Extract insulation
   let insulation: string | null = null;
   if (rfpText.toLowerCase().includes('xlpe')) {
     insulation = 'XLPE';
@@ -68,37 +149,8 @@ export function runSalesAgent(rfpText: string): RFPSummary {
     insulation = 'PVC';
   }
 
-  // Extract compliance standards
   const compliance: string[] = [];
-  const compliancePatterns = [
-    /is\s*compliant/i,
-    /iec\s*\d+/i,
-    /ieee\s*\d+/i,
-    /astm\s*\w+/i,
-    /bs\s*\d+/i,
-    /iso\s*\d+/i,
-    /industrial\s*grade/i
-  ];
-  for (const pattern of compliancePatterns) {
-    const match = rfpText.match(pattern);
-    if (match) {
-      const standard = match[0].trim();
-      if (!compliance.includes(standard)) {
-        compliance.push(standard.charAt(0).toUpperCase() + standard.slice(1).toLowerCase());
-      }
-    }
-  }
-
-  // Extract requirements (lines starting with - or *)
-  const requirements: string[] = [];
-  for (const line of lines) {
-    if (line.startsWith('-') || line.startsWith('*') || line.startsWith('•')) {
-      const requirement = line.replace(/^[-*•]\s*/, '').trim();
-      if (requirement && !requirement.toLowerCase().includes('rfp title') && !requirement.toLowerCase().includes('due date')) {
-        requirements.push(requirement);
-      }
-    }
-  }
+  const requirements: string[] = ["Error processing RFP with AI - using basic parsing"];
 
   return {
     title,
