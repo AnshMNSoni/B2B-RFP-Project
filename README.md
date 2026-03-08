@@ -11,12 +11,12 @@ The application follows a three-agent workflow with AI-enhanced intelligence:
 
 ## Key Features
 
-- 🤖 **AI-Powered Processing** - Leverages Google Gemini Pro for intelligent document understanding
-- 📊 **Smart SKU Matching** - AI evaluates technical compatibility beyond simple keyword matching
-- 💰 **Intelligent Pricing** - Context-aware quantity recommendations and pricing strategies
-- 🔄 **Fallback Logic** - Graceful degradation to rule-based processing if AI is unavailable
-- ⚡ **Fast Processing** - Typical RFP processing in 10-15 seconds
-- 🎯 **High Accuracy** - AI reasoning provides transparency in matching and pricing decisions
+- **AI-Powered Processing** - Leverages Google Gemini Pro for intelligent document understanding
+- **Smart SKU Matching** - AI evaluates technical compatibility beyond simple keyword matching
+- **Intelligent Pricing** - Context-aware quantity recommendations and pricing strategies
+- **Fallback Logic** - Graceful degradation to rule-based processing if AI is unavailable
+- **Fast Processing** - Typical RFP processing in 10-15 seconds
+- **High Accuracy** - AI reasoning provides transparency in matching and pricing decisions
 
 ## AI Integration
 
