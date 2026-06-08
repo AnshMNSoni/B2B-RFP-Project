@@ -1,5 +1,7 @@
 # RFP Agent AI
 
+<img width="1024" height="457" alt="rfp" src="https://github.com/user-attachments/assets/5e36c038-8160-4913-b944-e5ae3ea006b8" />
+
 ## Overview
 
 RFP Agent AI is an AI-powered B2B enterprise application for automated Request for Proposal (RFP) processing and quote generation, specifically designed for the wires and cables manufacturing industry. The system uses a multi-agent architecture powered by **Google Gemini AI** to intelligently extract requirements from RFP documents, match specifications to a product catalog, and generate pricing estimates.
