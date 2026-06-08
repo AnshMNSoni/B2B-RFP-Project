@@ -1,4 +1,4 @@
-# RFP Agent AI
+# RFP Agent
 
 <img width="1024" height="457" alt="rfp" src="https://github.com/user-attachments/assets/5e36c038-8160-4913-b944-e5ae3ea006b8" />
 
