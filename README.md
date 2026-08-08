@@ -22,15 +22,14 @@ The application follows a three-agent workflow with AI-enhanced intelligence:
 
 ## AI Integration
 
-### LLM Provider
-- **Model**: Google Gemini Pro (`gemini-pro`)
-- **API**: Google Generative AI API (v1beta)
-- **Cost**: Free tier (60 requests/min, 1,500 requests/day)
-- **Capacity**: Process ~500 RFPs per day within free limits
+### AI & ML Providers
+- **LLM Provider**: Google Gemini Pro (`gemini-pro`) - Unstructured text extraction & commercial analysis
+- **ML Embedding Provider**: Hugging Face Inference API (`sentence-transformers/all-MiniLM-L6-v2`) - 384-dimensional vector embeddings & cosine similarity spec matching
+- **Cost**: Both providers offer generous 100% Free Tiers with zero Render server memory overhead
 
 ### AI Agent Architecture
 
-Each agent uses Gemini AI to process information intelligently:
+Each agent uses Gemini AI & Hugging Face ML to process information intelligently:
 
 #### Sales Agent (AI-Powered)
 - Extracts structured data from unstructured RFP text
@@ -39,12 +38,12 @@ Each agent uses Gemini AI to process information intelligently:
 - Robust compliance standard detection
 - Falls back to regex-based parsing if AI fails
 
-#### Technical Agent (AI-Powered)
-- Evaluates SKU compatibility using intelligent reasoning
-- Considers voltage range compatibility and technical equivalence
-- Provides detailed reasoning for each SKU match
-- Calculates weighted match percentages (Voltage: 40%, Material: 30%, Insulation: 30%)
-- Falls back to rule-based matching if AI fails
+#### Technical Agent (Hugging Face ML + Gemini AI)
+- Generates 384-dimensional vector embeddings for RFP requirements via Hugging Face Serverless API
+- Calculates vector cosine similarity against product catalog embeddings
+- Evaluates SKU compatibility using semantic similarity + exact specification alignment
+- Provides detailed ML similarity scores and reasoning for each match
+- Falls back to Gemini AI / rule-based matching if Hugging Face API is unavailable
 
 #### Pricing Agent (AI-Powered)
 - Recommends optimal quantities based on project scope
@@ -55,12 +54,15 @@ Each agent uses Gemini AI to process information intelligently:
 
 ### Environment Configuration
 
-Required environment variable:
+Required environment variables:
 ```bash
 GEMINI_API_KEY=your_gemini_api_key_here
+HF_TOKEN=your_huggingface_token_here
 ```
 
-Get your free API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Get your free Gemini API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Get your free Hugging Face User Access Token at [Hugging Face Settings > Tokens](https://huggingface.co/settings/tokens)
+
 
 ### Error Handling
 
