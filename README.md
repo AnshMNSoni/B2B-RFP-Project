@@ -9,6 +9,101 @@ The application follows a three-agent workflow:
 2. **Technical Agent** - Matches RFP specifications to the SKU catalog with match percentages
 3. **Pricing Agent** - Generates detailed cost estimates including material, service, and testing costs
 
+## Workflow Diagram
+
+### Architecture & Agent Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Frontend ["Client Layer (React + Vite)"]
+        UI["User Interface Dashboard"]
+        Input["RFP Text Input"]
+        Output["Quotation & Spec Display"]
+    end
+
+    subgraph API ["API & Orchestration Layer (Express)"]
+        Endpoint["POST /api/process-rfp"]
+    end
+
+    subgraph Agents ["Multi-Agent AI Pipeline"]
+        direction TB
+        
+        subgraph Agent1 ["1. Sales Agent"]
+            SA_In["Input: Raw RFP Text"]
+            SA_AI["Gemini AI / Regex Parsing"]
+            SA_Out["Output: RFPSummary<br/>(Voltage, Material, Insulation, Standards)"]
+            SA_In --> SA_AI --> SA_Out
+        end
+
+        subgraph Agent2 ["2. Technical Agent"]
+            TA_In["Input: RFPSummary"]
+            TA_Catalog[("SKU Catalog Storage")]
+            TA_Match["Spec Comparison & Match % Calculator"]
+            TA_Out["Output: Ranked SKU Matches"]
+            TA_In --> TA_Catalog --> TA_Match --> TA_Out
+        end
+
+        subgraph Agent3 ["3. Pricing Agent"]
+            PA_In["Input: SKU Matches + RFP Text"]
+            PA_Pricing["Cost Engine<br/>(Base Price, Material Markup, Testing & Service)"]
+            PA_AI["Gemini Commercial & Risk Analysis"]
+            PA_Out["Output: Final Quotation & AI Insights"]
+            PA_In --> PA_Pricing --> PA_AI --> PA_Out
+        end
+    end
+
+    Input -->|Submit Document| Endpoint
+    Endpoint --> SA_In
+    SA_Out --> TA_In
+    TA_Out --> PA_In
+    PA_Out --> Output
+    Output --> UI
+```
+
+### Agent Execution Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Client UI
+    participant API as Express Server (/api/process-rfp)
+    participant Sales as Sales Agent
+    participant Gemini as Gemini AI Service
+    participant Tech as Technical Agent
+    participant DB as Product Catalog DB
+    participant Pricing as Pricing Agent
+
+    User->>API: POST /api/process-rfp (RFP Text)
+    
+    rect rgb(20, 83, 45)
+        note over Sales,Gemini: Step 1: Requirements Extraction
+        API->>Sales: runSalesAgent(rfpText)
+        Sales->>Gemini: Extract Technical Specs
+        Gemini-->>Sales: Extracted Specs (JSON)
+        Sales-->>API: RFPSummary (Voltage, Material, Insulation, etc.)
+    end
+
+    rect rgb(30, 58, 138)
+        note over Tech,DB: Step 2: Technical SKU Matching
+        API->>Tech: runTechnicalAgent(summary)
+        Tech->>DB: getSkuCatalog()
+        DB-->>Tech: Product Catalog SKUs
+        Tech->>Tech: Match Specifications & Calculate Match %
+        Tech-->>API: Ranked SKU Matches
+    end
+
+    rect rgb(112, 26, 117)
+        note over Pricing,Gemini: Step 3: Cost Estimation & Risk Analysis
+        API->>Pricing: runPricingAgent(matches, rfpText)
+        Pricing->>Pricing: Calculate Base, Material, Service & Testing Costs
+        Pricing->>Gemini: Generate Commercial Risk Analysis
+        Gemini-->>Pricing: Commercial & Risk Recommendations
+        Pricing-->>API: Final Quotation & Grand Total
+    end
+
+    API-->>User: Consolidated RFP Response (Summary, Matches, Pricing, Analysis)
+```
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
