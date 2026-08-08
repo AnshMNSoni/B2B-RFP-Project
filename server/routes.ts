@@ -81,7 +81,45 @@ export async function registerRoutes(
     }
   });
 
+  // Test Hugging Face API connection & Feature Extraction model
+  app.get("/api/test-huggingface", async (_req, res) => {
+    try {
+      const hfToken = process.env.HF_TOKEN;
+      
+      if (!hfToken || hfToken.trim().length === 0) {
+        return res.json({ 
+          success: false, 
+          error: "HF_TOKEN not found or empty in environment" 
+        });
+      }
+
+      const { HfInference } = await import("@huggingface/inference");
+      const hf = new HfInference(hfToken.trim());
+      
+      const embedding = await hf.featureExtraction({
+        model: "sentence-transformers/all-MiniLM-L6-v2",
+        inputs: "11kV Copper XLPE Cable Test Embedding",
+      });
+
+      res.json({ 
+        success: true, 
+        tokenExists: true,
+        tokenPrefix: hfToken.substring(0, 5) + "...",
+        model: "sentence-transformers/all-MiniLM-L6-v2",
+        vectorDimensions: Array.isArray(embedding) ? embedding.length : "unknown",
+        sampleVectorPreview: Array.isArray(embedding) ? (embedding as number[]).slice(0, 5) : embedding
+      });
+    } catch (error: any) {
+      res.json({ 
+        success: false, 
+        error: error.message,
+        stack: error.stack 
+      });
+    }
+  });
+
   // Process RFP - Main orchestrator endpoint
+
   app.post("/api/process-rfp", async (req, res) => {
     try {
       console.log("=== Starting RFP Processing ===");
