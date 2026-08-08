@@ -80,6 +80,8 @@ export async function runHuggingFaceEmbeddingMatch(summary: RFPSummary, hfToken:
       const vectorScore = Math.min(100, Math.max(0, Math.round(sim * 100)));
       const finalMatchPercentage = Math.min(100, Math.max(10, Math.round((vectorScore * 0.5) + (specScore * 0.5))));
 
+      const isMaterialMismatch = Boolean(summary.material && summary.material.toLowerCase() !== sku.material.toLowerCase());
+
       return {
         sku: sku.sku,
         description: sku.description,
@@ -88,7 +90,13 @@ export async function runHuggingFaceEmbeddingMatch(summary: RFPSummary, hfToken:
         material: sku.material,
         insulation: sku.insulation,
         basePrice: sku.basePrice,
-        reasoning: `Hugging Face ML (all-MiniLM-L6-v2) semantic similarity vector score: ${(sim * 100).toFixed(1)}%`
+        cores: sku.cores,
+        crossSection: sku.crossSection,
+        armoring: sku.armoring,
+        materialMismatch: isMaterialMismatch,
+        reasoning: isMaterialMismatch 
+          ? `Material Discrepancy Warning: RFP requested ${summary.material}, but catalog matched ${sku.material}. Verify specification before final submission.`
+          : `Hugging Face ML (all-MiniLM-L6-v2) semantic similarity vector score: ${(sim * 100).toFixed(1)}%`
       };
     });
 
@@ -188,6 +196,8 @@ Sort by match percentage descending.`
             const sku = SKU_CATALOG.find(s => s.sku === match.sku);
             if (!sku) return null;
 
+            const isMaterialMismatch = Boolean(summary.material && summary.material.toLowerCase() !== sku.material.toLowerCase());
+
             return {
               sku: sku.sku,
               description: sku.description,
@@ -196,7 +206,13 @@ Sort by match percentage descending.`
               material: sku.material,
               insulation: sku.insulation,
               basePrice: sku.basePrice,
-              reasoning: match.reasoning
+              cores: sku.cores,
+              crossSection: sku.crossSection,
+              armoring: sku.armoring,
+              materialMismatch: isMaterialMismatch,
+              reasoning: isMaterialMismatch 
+                ? `Material Discrepancy Warning: RFP requested ${summary.material}, but catalog matched ${sku.material}. Review before final submission.`
+                : match.reasoning
             };
           })
           .filter(Boolean);
@@ -251,7 +267,8 @@ function getFallbackMatches(summary: RFPSummary): SKUMatch[] {
       }
     }
 
-    const matchPercentage = maxScore === 0 ? 50 : Math.round((score / maxScore) * 100);
+    const matchPercentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 50;
+    const isMaterialMismatch = Boolean(summary.material && summary.material.toLowerCase() !== sku.material.toLowerCase());
 
     matches.push({
       sku: sku.sku,
@@ -261,7 +278,13 @@ function getFallbackMatches(summary: RFPSummary): SKUMatch[] {
       material: sku.material,
       insulation: sku.insulation,
       basePrice: sku.basePrice,
-      reasoning: "Fallback rule matching used"
+      cores: sku.cores,
+      crossSection: sku.crossSection,
+      armoring: sku.armoring,
+      materialMismatch: isMaterialMismatch,
+      reasoning: isMaterialMismatch
+        ? `Material Discrepancy Warning: RFP requested ${summary.material}, matched ${sku.material}.`
+        : `Match calculated based on voltage (${sku.voltage}), material (${sku.material}), and insulation (${sku.insulation}).`
     });
   }
 

@@ -1,5 +1,4 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 interface SKUMatch {
   sku: string;
@@ -9,6 +8,11 @@ interface SKUMatch {
   material: string;
   insulation: string;
   basePrice: number;
+  cores?: string;
+  crossSection?: string;
+  armoring?: string;
+  materialMismatch?: boolean;
+  reasoning?: string;
 }
 
 interface SKUMatchCardProps {
@@ -17,71 +21,79 @@ interface SKUMatchCardProps {
 }
 
 export default function SKUMatchCard({ match, rank }: SKUMatchCardProps) {
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 dark:text-green-400';
-    if (percentage >= 60) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-orange-600 dark:text-orange-400';
-  };
-
-  const getMatchBgColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-100 dark:bg-green-900/30';
-    if (percentage >= 60) return 'bg-yellow-100 dark:bg-yellow-900/30';
-    return 'bg-orange-100 dark:bg-orange-900/30';
-  };
+  const isLowMatch = match.matchPercentage < 80 || match.materialMismatch;
 
   return (
-    <Card className="relative" data-testid={`card-sku-match-${rank}`}>
-      <div className="absolute -top-2 -left-2 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
-        #{rank}
-      </div>
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="flex-1">
-            <p className="font-mono font-semibold text-sm mb-1" data-testid={`text-sku-code-${rank}`}>
-              {match.sku}
-            </p>
-            <p className="text-sm text-muted-foreground" data-testid={`text-sku-description-${rank}`}>
+    <Card className={`w-full border bg-[#1C2638] shadow-lg rounded-2xl overflow-hidden ${isLowMatch ? 'border-amber-500/60' : 'border-[#2E3B52]'}`} data-testid={`card-sku-match-${rank}`}>
+      <CardContent className="p-6 space-y-4">
+        {/* Upper Layout: Left Info & Right Large Match Number */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-[#94A3B8]">#{rank}</span>
+              <p className="font-mono font-bold text-sm text-[#F8FAFC]" data-testid={`text-sku-code-${rank}`}>
+                {match.sku}
+              </p>
+            </div>
+            <p className="text-xs text-[#94A3B8] leading-relaxed" data-testid={`text-sku-description-${rank}`}>
               {match.description}
             </p>
           </div>
-          <div className={`px-3 py-2 rounded-lg ${getMatchBgColor(match.matchPercentage)}`}>
-            <span className={`text-2xl font-bold ${getMatchColor(match.matchPercentage)}`} data-testid={`text-match-percentage-${rank}`}>
+
+          {/* Dominant Match Percentage Number */}
+          <div className="text-right shrink-0">
+            <span className={`text-3xl sm:text-4xl font-extrabold font-mono tracking-tight ${isLowMatch ? 'text-amber-400' : 'text-[#6366F1]'}`} data-testid={`text-match-percentage-${rank}`}>
               {match.matchPercentage}%
             </span>
-            <p className="text-xs text-muted-foreground text-center">match</p>
+            <p className="text-[10px] font-mono text-[#94A3B8] uppercase tracking-wider block">Match Score</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Voltage</p>
-            <Badge variant="outline" className="font-mono text-xs">
-              {match.voltage}
-            </Badge>
+        {/* Low Match / Material Discrepancy Warning Alert */}
+        {isLowMatch && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs font-mono text-amber-300">
+            <strong>Verify Spec:</strong> {match.materialMismatch ? 'Material mismatch detected (RFP requested different conductor material). ' : 'Match score below 80%. '}Review before final quote submission.
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Material</p>
-            <Badge variant="outline" className="font-mono text-xs">
-              {match.material}
-            </Badge>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Insulation</p>
-            <Badge variant="outline" className="font-mono text-xs">
-              {match.insulation}
-            </Badge>
-          </div>
-        </div>
+        )}
 
-        <div className="pt-3 border-t">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Base Price</span>
-            <span className="text-xl font-bold font-mono" data-testid={`text-base-price-${rank}`}>
-              ${match.basePrice.toLocaleString()}
+        {/* Technical Spec Badges: Voltage, Material, Insulation, Cores, CrossSection, Armoring */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-2.5 py-1 text-xs font-mono text-[#F8FAFC] bg-[#151D2A] border border-[#2E3B52] rounded-lg" data-testid={`text-voltage-${rank}`}>
+            {match.voltage}
+          </span>
+          <span className="px-2.5 py-1 text-xs font-mono text-[#F8FAFC] bg-[#151D2A] border border-[#2E3B52] rounded-lg" data-testid={`text-material-${rank}`}>
+            {match.material}
+          </span>
+          <span className="px-2.5 py-1 text-xs font-mono text-[#F8FAFC] bg-[#151D2A] border border-[#2E3B52] rounded-lg" data-testid={`text-insulation-${rank}`}>
+            {match.insulation}
+          </span>
+          {match.cores && (
+            <span className="px-2.5 py-1 text-xs font-mono text-[#6366F1] bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+              {match.cores}
             </span>
-          </div>
+          )}
+          {match.crossSection && (
+            <span className="px-2.5 py-1 text-xs font-mono text-[#6366F1] bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+              {match.crossSection}
+            </span>
+          )}
+          {match.armoring && (
+            <span className="px-2.5 py-1 text-xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/30 rounded-lg">
+              {match.armoring}
+            </span>
+          )}
+        </div>
+
+        {/* Bottom Line Metadata */}
+        <div className="pt-3 border-t border-[#2E3B52]/40 flex items-center justify-between text-xs font-mono text-[#94A3B8]">
+          <span>Semantic similarity score: {match.matchPercentage.toFixed(1)}%</span>
+          <span className="text-[#F8FAFC] font-semibold">₹{match.basePrice.toLocaleString()} / m</span>
+
         </div>
       </CardContent>
     </Card>
   );
 }
+
+
+

@@ -1,5 +1,4 @@
-import { CheckCircle, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Check, Loader2 } from 'lucide-react';
 
 interface AgentStep {
   id: string;
@@ -13,55 +12,82 @@ interface ProcessingStatusProps {
 }
 
 export default function ProcessingStatus({ steps }: ProcessingStatusProps) {
+  const activeStep = steps.find(s => s.status === 'processing') || steps.filter(s => s.status === 'completed').pop() || steps[0];
+
+  const getDynamicStatusText = () => {
+    if (activeStep.id === 'sales' && activeStep.status === 'processing') return "Sales Agent active...";
+    if (activeStep.id === 'technical' && activeStep.status === 'processing') return "Technical Agent active...";
+    if (activeStep.id === 'pricing' && activeStep.status === 'processing') return "Finalizing quote...";
+    return "Pipeline processing...";
+  };
+
   return (
-    <Card data-testid="card-processing-status">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold">Processing Status</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className="flex items-start gap-4"
-              data-testid={`status-step-${step.id}`}
-            >
-              <div className="flex flex-col items-center">
+    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center py-12 px-4 relative" data-testid="card-processing-status">
+      {/* Low Opacity Breathing Radial Glow */}
+      <div className="absolute inset-0 bg-indigo-600/10 blur-3xl rounded-full pointer-events-none animate-pulse" />
+
+      <div className="w-full relative z-10 space-y-8">
+        {/* Vertical Pipeline Timeline */}
+        <div className="relative pl-6 space-y-10">
+          {/* Vertical Connecting Indigo Line */}
+          <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-[#2E3B52]" />
+          <div 
+            className="absolute left-[19px] top-4 w-0.5 bg-[#6366F1] transition-all duration-500 ease-out" 
+            style={{
+              height: steps[2].status === 'completed' ? '85%' : steps[1].status === 'completed' || steps[1].status === 'processing' ? '50%' : '15%'
+            }}
+          />
+
+          {steps.map((step) => {
+            const isCompleted = step.status === 'completed';
+            const isProcessing = step.status === 'processing';
+
+            return (
+              <div key={step.id} className="relative flex items-start gap-4" data-testid={`status-step-${step.id}`}>
+                {/* Circle Indicator */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    step.status === 'completed'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : step.status === 'processing'
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-muted text-muted-foreground'
+                  className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center -ml-6 transition-all duration-300 ${
+                    isCompleted
+                      ? 'bg-[#6366F1] text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]'
+                      : isProcessing
+                      ? 'bg-[#1C2638] border-2 border-[#6366F1] text-[#6366F1] shadow-[0_0_16px_rgba(99,102,241,0.4)]'
+                      : 'bg-[#151D2A] border border-[#2E3B52] text-[#94A3B8]'
                   }`}
                 >
-                  {step.status === 'completed' ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : step.status === 'processing' ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                  {isCompleted ? (
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  ) : isProcessing ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <span className="text-sm font-semibold">{index + 1}</span>
+                    <div className="w-2 h-2 rounded-full bg-[#2E3B52]" />
                   )}
                 </div>
-                {index < steps.length - 1 && (
-                  <div className={`w-0.5 h-8 mt-1 ${
-                    step.status === 'completed' ? 'bg-green-300 dark:bg-green-700' : 'bg-border'
-                  }`} />
-                )}
+
+                {/* Text Labels */}
+                <div className="space-y-0.5">
+                  <h4 className={`text-sm font-semibold tracking-tight ${
+                    isCompleted || isProcessing ? 'text-[#F8FAFC]' : 'text-[#94A3B8]/60'
+                  }`}>
+                    {step.name}
+                  </h4>
+                  <p className={`text-xs ${
+                    isProcessing ? 'text-indigo-300 font-mono' : 'text-[#94A3B8]'
+                  }`}>
+                    {step.description}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 pb-2">
-                <p className={`font-medium ${
-                  step.status === 'pending' ? 'text-muted-foreground' : ''
-                }`}>
-                  {step.name}
-                </p>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Dynamic Status Text Footer */}
+        <div className="text-center pt-4 border-t border-[#2E3B52]/40">
+          <p className="text-xs font-mono text-[#94A3B8] animate-pulse">
+            {getDynamicStatusText()}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

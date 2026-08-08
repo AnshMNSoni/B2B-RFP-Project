@@ -2,168 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-  --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --border: 214 32% 91%;
-  --card: 0 0% 98%;
-  --card-foreground: 222 47% 11%;
-  --card-border: 214 20% 94%;
-  --sidebar: 214 20% 96%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-border: 214 20% 92%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 214 20% 90%;
-  --sidebar-accent-foreground: 222 47% 11%;
-  --sidebar-ring: 217 91% 60%;
-  --popover: 214 20% 94%;
-  --popover-foreground: 222 47% 11%;
-  --popover-border: 214 20% 88%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 214 20% 88%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 214 20% 90%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 214 20% 92%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 214 32% 75%;
-  --ring: 217 91% 60%;
-  --chart-1: 217 91% 60%;
-  --chart-2: 271 91% 65%;
-  --chart-3: 142 76% 36%;
-  --chart-4: 24 95% 53%;
-  --chart-5: 340 82% 52%;
-  --font-sans: 'IBM Plex Sans', sans-serif;
-  --font-serif: Georgia, serif;
+  --background: 222 35% 7%; /* #0B0F17 Obsidian */
+
+  --foreground: 210 40% 98%; /* #F8FAFC Off-white */
+  --border: 218 28% 25%; /* #2E3B52 Steel Border */
+  --card: 218 33% 16%; /* #1C2638 Card Surface */
+  --card-foreground: 210 40% 98%;
+  --primary: 239 84% 67%; /* #6366F1 Electric Indigo */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 218 31% 12%; /* #151D2A Row Tint */
+  --secondary-foreground: 210 40% 98%;
+  --muted: 218 28% 16%;
+  --muted-foreground: 215 16% 65%; /* #94A3B8 Muted Slate */
+  --accent: 239 84% 67%;
+  --accent-foreground: 0 0% 100%;
+  --radius: 0.75rem;
+  --font-sans: 'Inter', 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
-  --radius: .5rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 1px 2px -1px hsl(217 91% 60% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 1px 2px -1px hsl(217 91% 60% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 2px 4px -1px hsl(217 91% 60% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 4px 6px -1px hsl(217 91% 60% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 8px 10px -1px hsl(217 91% 60% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-
-/* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-  --background: 222 47% 11%;
-  --foreground: 0 0% 98%;
-  --border: 217 33% 17%;
-  --card: 222 47% 13%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 217 33% 16%;
-  --sidebar: 222 47% 15%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 217 33% 18%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 222 30% 18%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 217 91% 60%;
-  --popover: 222 40% 17%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 217 33% 20%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 222 30% 20%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 222 30% 19%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 222 30% 18%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 217 33% 30%;
-  --ring: 217 91% 60%;
-  --chart-1: 217 91% 70%;
-  --chart-2: 271 91% 75%;
-  --chart-3: 142 76% 60%;
-  --chart-4: 24 95% 65%;
-  --chart-5: 340 82% 65%;
-  --shadow-2xs: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 1px 2px -1px hsl(217 91% 60% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 1px 2px -1px hsl(217 91% 60% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 2px 4px -1px hsl(217 91% 60% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 4px 6px -1px hsl(217 91% 60% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(217 91% 60% / 0.00), 0px 8px 10px -1px hsl(217 91% 60% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(217 91% 60% / 0.00);
-
-/* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --background: 222 35% 7%; /* #0B0F17 Obsidian */
+  --foreground: 210 40% 98%; /* #F8FAFC Off-white */
+  --border: 218 28% 25%; /* #2E3B52 Steel Border */
+  --card: 218 33% 16%; /* #1C2638 Card Surface */
+  --card-foreground: 210 40% 98%;
+  --primary: 239 84% 67%; /* #6366F1 Electric Indigo */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 218 31% 12%; /* #151D2A Row Tint */
+  --secondary-foreground: 210 40% 98%;
+  --muted: 218 28% 16%;
+  --muted-foreground: 215 16% 65%; /* #94A3B8 Muted Slate */
+  --accent: 239 84% 67%;
+  --accent-foreground: 0 0% 100%;
 }
+
+@layer base {
+  body {
+    @apply bg-[#0B0F17] text-[#F8FAFC] font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200;
+  }
+}
+
+.cta-indigo-glow {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cta-indigo-glow:hover {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+}
+
+
 
 @layer base {
   * {

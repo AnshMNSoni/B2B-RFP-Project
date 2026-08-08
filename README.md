@@ -20,71 +20,99 @@ The application follows a three-agent workflow with AI-enhanced intelligence:
 - **Fast Processing** - Typical RFP processing in 10-15 seconds
 - **High Accuracy** - AI reasoning provides transparency in matching and pricing decisions
 
-## AI Integration
+## AI & ML Integration
 
-### AI & ML Providers
-- **LLM Provider**: Google Gemini Pro (`gemini-pro`) - Unstructured text extraction & commercial analysis
-- **ML Embedding Provider**: Hugging Face Inference API (`sentence-transformers/all-MiniLM-L6-v2`) - 384-dimensional vector embeddings & cosine similarity spec matching
-- **Cost**: Both providers offer generous 100% Free Tiers with zero Render server memory overhead
+The system follows a hybrid multi-agent architecture combining **Generative AI (LLMs)** for text understanding, **Predictive ML (Vector Embeddings)** for semantic matching, and **Deterministic Code** for financial math.
 
-### AI Agent Architecture
+### Models & Infrastructure
 
-Each agent uses Gemini AI & Hugging Face ML to process information intelligently:
+- **Primary LLM Provider**: **Groq Cloud API** (`llama-3.3-70b-versatile`)
+  - **SDK**: `groq-sdk`
+  - **Role**: Ultra-fast sub-second Sales Agent RFP extraction & Pricing Agent commercial risk analysis
+  - **Key Link**: [Groq Console](https://console.groq.com/keys)
 
-#### Sales Agent (AI-Powered)
-- Extracts structured data from unstructured RFP text
-- Understands various date formats and terminology
-- Identifies technical specifications even with non-standard phrasing
-- Robust compliance standard detection
-- Falls back to regex-based parsing if AI fails
+- **Fallback LLM Provider**: **Google Gemini Pro** (`gemini-pro`)
+  - **Role**: Automatic fallback if Groq API is unconfigured
 
-#### Technical Agent (Hugging Face ML + Gemini AI)
-- Generates 384-dimensional vector embeddings for RFP requirements via Hugging Face Serverless API
-- Calculates vector cosine similarity against product catalog embeddings
-- Evaluates SKU compatibility using semantic similarity + exact specification alignment
-- Provides detailed ML similarity scores and reasoning for each match
-- Falls back to Gemini AI / rule-based matching if Hugging Face API is unavailable
+- **ML Embedding Provider**: **Hugging Face Inference API**
+  - **Model**: [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
+  - **Role**: Technical Agent 384-dimensional vector embedding generation & Cosine Similarity SKU catalog matching
+  - **Key Link**: [Hugging Face Model Page](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
 
-#### Pricing Agent (AI-Powered)
-- Recommends optimal quantities based on project scope
-- Analyzes voltage ratings to determine appropriate quantities
-- Provides reasoning for quantity recommendations
-- Generates strategic pricing analysis and recommendations
-- Falls back to standard pricing formulas if AI fails
 
-### Environment Configuration
+- **Infrastructure Overhead**: Zero server memory impact on Render (100% cloud inference via Serverless APIs)
 
-Required environment variables:
+### Multi-Agent Pipeline Breakdown
+
+#### 1. Sales Agent (LLM Extractor)
+- Extracts structured specification JSON from unstructured RFP text
+- Identifies voltage ratings, conductor materials, insulation types, and compliance standards (`IS 7098`, `IEC 60502`)
+- Automatic fallback to regex-based parsing if API is unconfigured
+
+#### 2. Technical Agent (Hugging Face ML Vector Matcher)
+- Calls Hugging Face Inference API for [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
+- Generates 384-dimensional dense vectors for extracted RFP requirements and catalog items
+- Computes mathematical **Cosine Similarity** to evaluate true semantic compatibility
+- Ranked match scores (0-100%) with automated fallbacks to Gemini AI / rule-based matching
+
+#### 3. Pricing Agent (Deterministic Financial Engine + LLM Risk & Value Engineering)
+- Pure TypeScript code calculates base price, material markup (+20% copper factor), service charges (5%), and testing fees
+- Eliminates financial math hallucinations by executing deterministic math formulas
+- **AI Value Engineering Engine**: Evaluates material & thermal trade-offs (e.g. Copper → Ampacity-Equivalent Aluminium) to generate alternative cost-optimized quote option with technical compliance justification (`IEC 60502-2` / `IS 7098`)
+- Gemini / Groq AI generates strategic commercial risk alerts and raw material price volatility recommendations
+
+---
+
+## Environment Configuration & Guidelines
+
+### Environment Variables (`.env` / `.env.example`)
+
+Copy [.env.example](file:///e:/Ansh-Stuffings/Work/Github/B2B-RFP-Project/.env.example) to `.env` in the root directory:
+
 ```bash
-GEMINI_API_KEY=your_gemini_api_key_here
-HF_TOKEN=your_huggingface_token_here
+cp .env.example .env
 ```
 
-- Get your free Gemini API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
-- Get your free Hugging Face User Access Token at [Hugging Face Settings > Tokens](https://huggingface.co/settings/tokens)
+Set the required API tokens inside `.env`:
 
+```env
+# Groq API Key (Ultra-Fast LLM Provider)
+GROQ_API_KEY=your_groq_api_key_here
 
-### Error Handling
+# Google Gemini API Key (Fallback LLM Provider)
+GEMINI_API_KEY=your_gemini_api_key_here
 
-The system implements comprehensive error handling:
-- API timeout handling (30 seconds per agent)
-- Automatic fallback to rule-based logic
-- Graceful degradation without service disruption
-- Detailed error logging for debugging
+# Hugging Face Access Token (Serverless Embedding API)
+HF_TOKEN=your_huggingface_access_token_here
 
-## Workflow Diagram
+# Server Port (Default: 5000)
+PORT=5000
+```
 
-### Architecture & Agent Pipeline
+### Verification Endpoints
+
+Test system connections directly after launching the server:
+
+- **Test Groq API**: `GET /api/test-groq`
+- **Test Hugging Face Model**: `GET /api/test-huggingface`
+- **Test Gemini API**: `GET /api/test-gemini`
+- **System Health**: `GET /api/health`
+
+---
+
+## Workflow Diagrams
+
+### Backend Multi-Agent Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Frontend ["Client Layer (React + Vite)"]
-        UI["User Interface Dashboard"]
-        Input["RFP Text Input"]
-        Output["Quotation & Spec Display"]
+    subgraph Client ["Client Layer (React / Vite)"]
+        UI["User Interface Workshop"]
+        Input["RFP Text / File Upload (PDF, DOCX, XLSX)"]
+        Output["3-Phase Single Page Experience Stream"]
     end
 
-    subgraph API ["API & Orchestration Layer (Express)"]
+    subgraph Backend ["Backend Orchestrator (Express)"]
         Endpoint["POST /api/process-rfp"]
     end
 
@@ -92,34 +120,35 @@ flowchart TD
         direction TB
         
         subgraph Agent1 ["1. Sales Agent"]
-            SA_In["Input: Raw RFP Text"]
-            SA_AI["Gemini AI / Regex Parsing"]
-            SA_Out["Output: RFPSummary<br/>(Voltage, Material, Insulation, Standards)"]
-            SA_In --> SA_AI --> SA_Out
+            SA_In["Input: Raw RFP Text / Document"]
+            SA_LLM["Groq Llama 3.3 70B / Gemini LLM"]
+            SA_Out["Output: RFPSummary JSON<br/>(Voltage, Material, Insulation, Standards)"]
+            SA_In --> SA_LLM --> SA_Out
         end
 
         subgraph Agent2 ["2. Technical Agent"]
             TA_In["Input: RFPSummary"]
-            TA_Catalog[("SKU Catalog Storage")]
-            TA_Match["Spec Comparison & Match % Calculator"]
-            TA_Out["Output: Ranked SKU Matches"]
-            TA_In --> TA_Catalog --> TA_Match --> TA_Out
+            TA_HF["Hugging Face Inference API<br/>(sentence-transformers/all-MiniLM-L6-v2)"]
+            TA_Cosine["384-Dim Cosine Similarity Engine"]
+            TA_Out["Output: Ranked SKU Matches & Similarity %"]
+            TA_In --> TA_HF --> TA_Cosine --> TA_Out
         end
 
-        subgraph Agent3 ["3. Pricing Agent"]
+        subgraph Agent3 ["3. Pricing & Value Engineering Agent"]
             PA_In["Input: SKU Matches + RFP Text"]
-            PA_Pricing["Cost Engine<br/>(Base Price, Material Markup, Testing & Service)"]
-            PA_AI["Gemini Commercial & Risk Analysis"]
-            PA_Out["Output: Final Quotation & AI Insights"]
-            PA_In --> PA_Pricing --> PA_AI --> PA_Out
+            PA_Math["Deterministic Cost Engine<br/>(Base, Material Markup, Testing & Service)"]
+            PA_VE["AI Value Engineering Engine<br/>(Material Trade-offs & Ampacity Equivalence)"]
+            PA_LLM["Groq / Gemini Commercial Risk Analysis"]
+            PA_Out["Output: Consolidated Quote + Cost Optimization Option"]
+            PA_In --> PA_Math --> PA_VE --> PA_LLM --> PA_Out
         end
     end
 
-    Input -->|Submit Document| Endpoint
-    Endpoint --> SA_In
-    SA_Out --> TA_In
-    TA_Out --> PA_In
-    PA_Out --> Output
+    Input --> Endpoint
+    Endpoint --> Agent1
+    Agent1 --> Agent2
+    Agent2 --> Agent3
+    Agent3 --> Output
     Output --> UI
 ```
 
@@ -131,41 +160,44 @@ sequenceDiagram
     actor User as User / Client UI
     participant API as Express Server (/api/process-rfp)
     participant Sales as Sales Agent
-    participant Gemini as Gemini AI Service
+    participant Gemini as Google Gemini Pro API
     participant Tech as Technical Agent
+    participant HF as Hugging Face Inference API
     participant DB as Product Catalog DB
     participant Pricing as Pricing Agent
 
     User->>API: POST /api/process-rfp (RFP Text)
     
     rect rgb(20, 83, 45)
-        note over Sales,Gemini: Step 1: Requirements Extraction
+        note over Sales,Gemini: Step 1: Requirements Extraction (LLM)
         API->>Sales: runSalesAgent(rfpText)
-        Sales->>Gemini: Extract Technical Specs
-        Gemini-->>Sales: Extracted Specs (JSON)
-        Sales-->>API: RFPSummary (Voltage, Material, Insulation, etc.)
+        Sales->>Gemini: Extract Technical Specs (gemini-pro)
+        Gemini-->>Sales: Extracted Specs (RFPSummary JSON)
+        Sales-->>API: RFPSummary (Voltage, Material, Insulation, Standards)
     end
 
     rect rgb(30, 58, 138)
-        note over Tech,DB: Step 2: Technical SKU Matching
+        note over Tech,HF: Step 2: Technical Vector SKU Matching (Hugging Face ML)
         API->>Tech: runTechnicalAgent(summary)
-        Tech->>DB: getSkuCatalog()
-        DB-->>Tech: Product Catalog SKUs
-        Tech->>Tech: Match Specifications & Calculate Match %
-        Tech-->>API: Ranked SKU Matches
+        Tech->>HF: Generate 384-dim Vector Embedding (all-MiniLM-L6-v2)
+        HF-->>Tech: RFP Query Vector
+        Tech->>DB: Fetch SKU Catalog Vectors
+        Tech->>Tech: Compute Cosine Similarity & Spec Scores
+        Tech-->>API: Ranked SKU Matches & Similarity Scores
     end
 
     rect rgb(112, 26, 117)
-        note over Pricing,Gemini: Step 3: Cost Estimation & Risk Analysis
+        note over Pricing,Gemini: Step 3: Cost Calculation & Commercial Risk Analysis
         API->>Pricing: runPricingAgent(matches, rfpText)
-        Pricing->>Pricing: Calculate Base, Material, Service & Testing Costs
-        Pricing->>Gemini: Generate Commercial Risk Analysis
-        Gemini-->>Pricing: Commercial & Risk Recommendations
-        Pricing-->>API: Final Quotation & Grand Total
+        Pricing->>Pricing: Execute Deterministic Financial Math (Base, Material, Service, Testing)
+        Pricing->>Gemini: Generate Strategic Risk Analysis (gemini-pro)
+        Gemini-->>Pricing: Commercial Risk Recommendations
+        Pricing-->>API: Consolidated Quotation & Grand Total
     end
 
-    API-->>User: Consolidated RFP Response (Summary, Matches, Pricing, Analysis)
+    API-->>User: Step-by-Step Progressive Reveal (Summary -> Matches -> Quotation)
 ```
+
 
 ## User Preferences
 

@@ -1,5 +1,6 @@
 import Header from '../Header';
 
 export default function HeaderExample() {
-  return <Header />;
+  return <Header phase="input" />;
 }
+

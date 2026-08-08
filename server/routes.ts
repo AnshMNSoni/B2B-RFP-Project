@@ -1,17 +1,49 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import { processRfpRequestSchema, type RFPResponse } from "@shared/schema";
 import { runSalesAgent } from "./agents/salesAgent";
 import { runTechnicalAgent } from "./agents/technicalAgent";
 import { runPricingAgent } from "./agents/pricingAgent";
+import { parseDocumentBuffer } from "./services/documentParser";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 } // 15MB max file size
+});
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
+  // Document File Upload & Parsing Endpoint (PDF, DOCX, XLSX, CSV, TXT)
+  app.post("/api/parse-document", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "No file uploaded" });
+      }
+
+      const result = await parseDocumentBuffer(req.file.buffer, req.file.originalname);
+      return res.json({
+        success: true,
+        filename: result.filename,
+        fileType: result.fileType,
+        text: result.extractedText,
+        metadata: result.metadata
+      });
+    } catch (error: any) {
+      console.error("Parse document endpoint error:", error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || "Failed to parse document"
+      });
+    }
+  });
+
   // Health check endpoint
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "healthy" });
   });
@@ -26,8 +58,42 @@ export async function registerRoutes(
     }
   });
 
+  // Test Groq API connection
+  app.get("/api/test-groq", async (_req, res) => {
+    try {
+      const apiKey = process.env.GROQ_API_KEY;
+      
+      if (!apiKey) {
+        return res.json({ 
+          success: false, 
+          error: "GROQ_API_KEY not found in environment" 
+        });
+      }
+
+      const Groq = (await import("groq-sdk")).default;
+      const groq = new Groq({ apiKey });
+      const response = await groq.chat.completions.create({
+        messages: [{ role: "user", content: "Say hello in 3 words" }],
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 20
+      });
+
+      return res.json({
+        success: true,
+        model: "llama-3.3-70b-versatile",
+        response: response.choices[0]?.message?.content?.trim()
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || "Groq API test failed" 
+      });
+    }
+  });
+
   // Test Gemini API connection
   app.get("/api/test-gemini", async (_req, res) => {
+
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       
@@ -149,8 +215,9 @@ export async function registerRoutes(
 
       // Run Pricing Agent - Generate cost estimates (ADDED AWAIT)
       console.log("Starting Pricing Agent...");
-      const pricingResult = await runPricingAgent(matches, rfpText);
+      const pricingResult = await runPricingAgent(matches, rfpText, summary);
       console.log("Pricing Agent completed");
+
 
       // Return consolidated RFP response
       const response: RFPResponse = {
@@ -160,7 +227,12 @@ export async function registerRoutes(
         pricing: pricingResult.items,
         grandTotal: pricingResult.grandTotal,
         analysis: pricingResult.analysis, // Include AI analysis
+        valueEngineering: pricingResult.valueEngineering,
+        unitOptimization: pricingResult.unitOptimization,
+        riskCharts: pricingResult.riskCharts,
       };
+
+
 
       res.json(response);
     } catch (error: any) {

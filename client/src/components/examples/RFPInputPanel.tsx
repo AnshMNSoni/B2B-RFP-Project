@@ -28,8 +28,9 @@ Requirements:
       rfpText={rfpText}
       onRfpTextChange={setRfpText}
       onProcess={handleProcess}
-      onLoadSample={handleLoadSample}
+      onLoadPreset={setRfpText}
       isProcessing={isProcessing}
     />
   );
+
 }
