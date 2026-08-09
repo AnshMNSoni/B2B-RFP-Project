@@ -1,3 +1,5 @@
+
+
 # RFP Agent
 
 <img width="1024" height="457" alt="rfp" src="https://github.com/user-attachments/assets/5e36c038-8160-4913-b944-e5ae3ea006b8" />
@@ -297,14 +299,17 @@ npm install
 
 ### 2. Configure Environment Variables
 Create a `.env` file in the project root:
-```bash
+```env
+GROQ_API_KEY=your_groq_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
+HF_TOKEN=your_huggingface_access_token_here
+PORT=5000
 ```
 
-### 3. Get Gemini API Key
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Click "Create API Key"
-3. Copy and paste into your `.env` file
+### 3. Get API Keys
+1. Visit [Groq Console](https://console.groq.com/keys), [Google AI Studio](https://makersuite.google.com/app/apikey), and [Hugging Face Settings](https://huggingface.co/settings/tokens)
+2. Generate your API keys/tokens
+3. Copy and paste them into your `.env` file
 
 ### 4. Run Development Server
 ```bash
