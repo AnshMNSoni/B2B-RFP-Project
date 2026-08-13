@@ -16,6 +16,7 @@ import {
   Legend
 } from 'recharts';
 import type { RiskChartsData } from '@shared/schema';
+import { motion } from 'framer-motion';
 
 interface RiskAnalysisChartCardProps {
   riskAnalysisText?: string;
@@ -38,9 +39,9 @@ export default function RiskAnalysisChartCard({
   ];
 
   const defaultCostDistribution = [
-    { category: 'Conductor Raw Metal', value: 55, color: '#6366F1' },
-    { category: 'Polymer Insulation', value: 20, color: '#38BDF8' },
-    { category: 'Armor & Sheath', value: 15, color: '#818CF8' },
+    { category: 'Conductor Raw Metal', value: 55, color: '#3B82F6' },
+    { category: 'Polymer Insulation', value: 20, color: '#0EA5E9' },
+    { category: 'Armor & Sheath', value: 15, color: '#6366F1' },
     { category: 'Testing & Freight', value: 10, color: '#94A3B8' },
   ];
 
@@ -48,128 +49,129 @@ export default function RiskAnalysisChartCard({
   const distributionData = chartsData?.costDistribution || defaultCostDistribution;
 
   return (
-    <Card className="w-full border border-[#2E3B52] bg-[#1C2638] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in duration-300" data-testid="card-risk-charts">
-      <CardHeader className="p-6 bg-[#151D2A] border-b border-[#2E3B52]/60">
-        <CardTitle className="text-base font-bold text-[#F8FAFC] tracking-tight flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-indigo-600/20 border border-indigo-500/40 rounded-lg flex items-center justify-center shadow-[0_0_12px_rgba(99,102,241,0.25)]">
-            <Activity className="w-4 h-4 text-[#6366F1]" />
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+      <Card className="w-full border border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden" data-testid="card-risk-charts">
+        <CardHeader className="p-6 bg-slate-50 border-b border-slate-100">
+          <CardTitle className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-100 border border-blue-200 rounded-lg flex items-center justify-center shadow-sm">
+              <Activity className="w-4 h-4 text-blue-600" />
+            </div>
+            AI Commercial Risk & Market Volatility Analysis
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="p-6 md:p-8 space-y-6">
+          {/* Top 3 Metric Risk Score Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
+                <span>Commodity Risk</span>
+                <TrendingUp className="w-4 h-4 text-blue-600" />
+              </div>
+              <p className="text-sm font-bold font-mono text-blue-600">High Volatility (LME)</p>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
+                <span>Lead Time & Logistics</span>
+                <Activity className="w-4 h-4 text-sky-500" />
+              </div>
+              <p className="text-sm font-bold font-mono text-sky-600">Low Exposure (Standard)</p>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase">
+                <span>Spec Compliance</span>
+                <ShieldAlert className="w-4 h-4 text-indigo-500" />
+              </div>
+              <p className="text-sm font-bold font-mono text-indigo-600">Zero Discrepancy</p>
+            </div>
           </div>
-          AI Commercial Risk & Market Volatility Analysis
-        </CardTitle>
-      </CardHeader>
 
-      <CardContent className="p-6 space-y-6">
-        {/* Top 3 Metric Risk Score Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 bg-[#151D2A] border border-[#2E3B52]/60 rounded-xl space-y-1">
-            <div className="flex items-center justify-between text-xs font-mono text-[#94A3B8]">
-              <span>Commodity Risk</span>
-              <TrendingUp className="w-3.5 h-3.5 text-[#6366F1]" />
-            </div>
-            <p className="text-sm font-bold font-mono text-[#6366F1]">High Volatility (LME)</p>
+          {/* Interactive Charts Tabs */}
+          <Tabs defaultValue="commodity" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="bg-slate-100 border border-slate-200 p-1.5 rounded-xl shadow-inner">
+              <TabsTrigger value="commodity" className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm rounded-lg px-4">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                LME Metal Spot Volatility
+              </TabsTrigger>
+              <TabsTrigger value="distribution" className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm rounded-lg px-4">
+                <PieChartIcon className="w-4 h-4 mr-2" />
+                Cost Exposure Breakdown
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Tab 1: AreaChart Commodity Price Volatility */}
+            <TabsContent value="commodity" className="pt-5">
+              <div className="h-72 w-full bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <p className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">6-Month LME Spot Price Curve ($/Ton)</p>
+                <ResponsiveContainer width="100%" height="85%">
+                  <AreaChart data={trendData}>
+                    <defs>
+                      <linearGradient id="colorCopper" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorAluminium" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                    <XAxis dataKey="month" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#ffffff', borderColor: '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: '#1E293B', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                    />
+                    <Area type="monotone" dataKey="copperPrice" name="Copper (₹/t)" stroke="#3B82F6" fillOpacity={1} fill="url(#colorCopper)" strokeWidth={3} />
+                    <Area type="monotone" dataKey="aluminiumPrice" name="Aluminium (₹/t)" stroke="#0EA5E9" fillOpacity={1} fill="url(#colorAluminium)" strokeWidth={3} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+
+            {/* Tab 2: PieChart Cost Distribution */}
+            <TabsContent value="distribution" className="pt-5">
+              <div className="h-72 w-full bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                <p className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wider">Cost Risk Component Share (%)</p>
+                <ResponsiveContainer width="100%" height="85%">
+                  <PieChart>
+                    <Pie
+                      data={distributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {distributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#ffffff', borderColor: '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: '#1E293B', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: '12px', fontWeight: '500', color: '#475569', paddingTop: '10px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Risk Mitigation Note */}
+          <div className="p-5 bg-blue-50/50 border border-blue-100 border-l-4 border-l-blue-500 rounded-xl space-y-1.5 shadow-sm">
+            <h4 className="text-sm font-bold text-slate-900 tracking-tight">
+              Strategic Mitigation Recommendation
+            </h4>
+            <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              {riskAnalysisText}
+            </p>
           </div>
-
-          <div className="p-3 bg-[#151D2A] border border-[#2E3B52]/60 rounded-xl space-y-1">
-            <div className="flex items-center justify-between text-xs font-mono text-[#94A3B8]">
-              <span>Lead Time & Logistics</span>
-              <Activity className="w-3.5 h-3.5 text-[#38BDF8]" />
-            </div>
-            <p className="text-sm font-bold font-mono text-[#38BDF8]">Low Exposure (Standard)</p>
-          </div>
-
-          <div className="p-3 bg-[#151D2A] border border-[#2E3B52]/60 rounded-xl space-y-1">
-            <div className="flex items-center justify-between text-xs font-mono text-[#94A3B8]">
-              <span>Spec Compliance</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-[#818CF8]" />
-            </div>
-            <p className="text-sm font-bold font-mono text-[#818CF8]">Zero Discrepancy</p>
-          </div>
-        </div>
-
-        {/* Interactive Charts Tabs */}
-        <Tabs defaultValue="commodity" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-[#151D2A] border border-[#2E3B52]/60 p-1 rounded-xl">
-            <TabsTrigger value="commodity" className="text-xs font-mono data-[state=active]:bg-[#6366F1] data-[state=active]:text-white">
-              <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-              LME Metal Spot Volatility
-            </TabsTrigger>
-            <TabsTrigger value="distribution" className="text-xs font-mono data-[state=active]:bg-[#6366F1] data-[state=active]:text-white">
-              <PieChartIcon className="w-3.5 h-3.5 mr-1.5" />
-              Cost Exposure Breakdown
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Tab 1: AreaChart Commodity Price Volatility */}
-          <TabsContent value="commodity" className="pt-4">
-            <div className="h-64 w-full bg-[#151D2A]/60 border border-[#2E3B52]/60 rounded-xl p-4">
-              <p className="text-xs font-mono text-[#94A3B8] mb-2">6-Month LME Spot Price Curve ($/Ton)</p>
-              <ResponsiveContainer width="100%" height="85%">
-                <AreaChart data={trendData}>
-                  <defs>
-                    <linearGradient id="colorCopper" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorAluminium" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#38BDF8" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2E3B52" />
-                  <XAxis dataKey="month" stroke="#94A3B8" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1C2638', borderColor: '#2E3B52', borderRadius: '8px', fontSize: '12px', color: '#F8FAFC' }}
-                  />
-                  <Area type="monotone" dataKey="copperPrice" name="Copper (₹/t)" stroke="#6366F1" fillOpacity={1} fill="url(#colorCopper)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="aluminiumPrice" name="Aluminium (₹/t)" stroke="#38BDF8" fillOpacity={1} fill="url(#colorAluminium)" strokeWidth={2} />
-
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </TabsContent>
-
-          {/* Tab 2: PieChart Cost Distribution */}
-          <TabsContent value="distribution" className="pt-4">
-            <div className="h-64 w-full bg-[#151D2A]/60 border border-[#2E3B52]/60 rounded-xl p-4">
-              <p className="text-xs font-mono text-[#94A3B8] mb-2">Cost Risk Component Share (%)</p>
-              <ResponsiveContainer width="100%" height="85%">
-                <PieChart>
-                  <Pie
-                    data={distributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {distributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1C2638', borderColor: '#2E3B52', borderRadius: '8px', fontSize: '12px', color: '#F8FAFC' }}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', color: '#94A3B8' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Risk Mitigation Note */}
-        <div className="p-4 bg-[#151D2A] border border-[#2E3B52]/60 border-l-4 border-l-[#6366F1] rounded-xl space-y-1">
-          <h4 className="text-xs font-bold text-[#F8FAFC] tracking-tight">
-            Strategic Mitigation Recommendation
-          </h4>
-          <p className="text-xs text-[#94A3B8] leading-relaxed font-sans">
-            {riskAnalysisText}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

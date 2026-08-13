@@ -1,5 +1,6 @@
 import { Zap, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 interface HeaderProps {
   phase: 'input' | 'processing' | 'results';
@@ -8,33 +9,40 @@ interface HeaderProps {
 
 export default function Header({ phase, onNewRfp }: HeaderProps) {
   return (
-    <header className="w-full border-b border-[#2E3B52]/50 bg-[#0B0F17]/80 backdrop-blur-md" data-testid="header">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/70 backdrop-blur-xl shadow-sm" data-testid="header">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         {/* Logo & Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600/20 border border-indigo-500/40 rounded-lg flex items-center justify-center shadow-[0_0_12px_rgba(99,102,241,0.25)]">
-            <Zap className="w-4 h-4 text-[#6366F1]" />
-          </div>
+        <div className="flex items-center gap-4">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center shadow-[0_4px_14px_0_rgba(37,99,235,0.15)]"
+          >
+            <Zap className="w-5 h-5 text-blue-600" />
+          </motion.div>
           <div>
-            <h1 className="text-base font-bold tracking-tight text-[#F8FAFC]" data-testid="text-app-title">
+            <h1 className="text-lg font-bold tracking-tight text-slate-900" data-testid="text-app-title">
               RFP Agent AI
             </h1>
-            <p className="text-xs text-[#94A3B8]">Automated B2B Multi-Agent Quote Generation</p>
+            <p className="text-sm font-medium text-slate-500">Automated B2B Quote Generation</p>
           </div>
         </div>
 
         {/* Phase 3 Action: Reset to New RFP */}
         {phase === 'results' && onNewRfp && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onNewRfp}
-            className="text-xs font-mono text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1C2638] border border-[#2E3B52]/60 transition-colors"
-            data-testid="button-new-rfp"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5 text-[#6366F1]" />
-            New RFP
-          </Button>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onNewRfp}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-slate-200 transition-colors shadow-sm"
+              data-testid="button-new-rfp"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 text-blue-600" />
+              New RFP
+            </Button>
+          </motion.div>
         )}
       </div>
     </header>

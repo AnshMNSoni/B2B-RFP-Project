@@ -1,4 +1,5 @@
 import { Check, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AgentStep {
   id: string;
@@ -22,72 +23,104 @@ export default function ProcessingStatus({ steps }: ProcessingStatusProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center py-12 px-4 relative" data-testid="card-processing-status">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.4 }}
+      className="w-full max-w-md mx-auto flex flex-col items-center justify-center py-12 px-4 relative" 
+      data-testid="card-processing-status"
+    >
       {/* Low Opacity Breathing Radial Glow */}
-      <div className="absolute inset-0 bg-indigo-600/10 blur-3xl rounded-full pointer-events-none animate-pulse" />
+      <div className="absolute inset-0 bg-blue-100/50 blur-3xl rounded-full pointer-events-none animate-pulse" />
 
-      <div className="w-full relative z-10 space-y-8">
+      <div className="w-full relative z-10 bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-slate-100">
         {/* Vertical Pipeline Timeline */}
         <div className="relative pl-6 space-y-10">
-          {/* Vertical Connecting Indigo Line */}
-          <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-[#2E3B52]" />
-          <div 
-            className="absolute left-[19px] top-4 w-0.5 bg-[#6366F1] transition-all duration-500 ease-out" 
-            style={{
-              height: steps[2].status === 'completed' ? '85%' : steps[1].status === 'completed' || steps[1].status === 'processing' ? '50%' : '15%'
+          {/* Vertical Connecting Light Line */}
+          <div className="absolute left-[24px] top-4 bottom-4 w-0.5 bg-slate-100" />
+          <motion.div 
+            className="absolute left-[24px] top-4 w-0.5 bg-blue-500 origin-top" 
+            initial={{ height: "0%" }}
+            animate={{
+              height: steps[2].status === 'completed' ? '100%' : steps[1].status === 'completed' || steps[1].status === 'processing' ? '50%' : '15%'
             }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
           />
 
-          {steps.map((step) => {
+          {steps.map((step, index) => {
             const isCompleted = step.status === 'completed';
             const isProcessing = step.status === 'processing';
 
             return (
-              <div key={step.id} className="relative flex items-start gap-4" data-testid={`status-step-${step.id}`}>
+              <motion.div 
+                key={step.id} 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.2 }}
+                className="relative flex items-start gap-5" 
+                data-testid={`status-step-${step.id}`}
+              >
                 {/* Circle Indicator */}
-                <div
-                  className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center -ml-6 transition-all duration-300 ${
+                <motion.div
+                  animate={{
+                    scale: isProcessing ? [1, 1.1, 1] : 1,
+                  }}
+                  transition={{ repeat: isProcessing ? Infinity : 0, duration: 2 }}
+                  className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center -ml-[30px] transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-[#6366F1] text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]'
+                      ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)]'
                       : isProcessing
-                      ? 'bg-[#1C2638] border-2 border-[#6366F1] text-[#6366F1] shadow-[0_0_16px_rgba(99,102,241,0.4)]'
-                      : 'bg-[#151D2A] border border-[#2E3B52] text-[#94A3B8]'
+                      ? 'bg-white border-2 border-blue-500 text-blue-600 shadow-[0_0_16px_rgba(37,99,235,0.2)]'
+                      : 'bg-slate-50 border border-slate-200 text-slate-400'
                   }`}
                 >
                   {isCompleted ? (
                     <Check className="w-4 h-4 stroke-[3]" />
                   ) : isProcessing ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <div className="w-2 h-2 rounded-full bg-[#2E3B52]" />
+                    <div className="w-2 h-2 rounded-full bg-slate-200" />
                   )}
-                </div>
+                </motion.div>
 
                 {/* Text Labels */}
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <h4 className={`text-sm font-semibold tracking-tight ${
-                    isCompleted || isProcessing ? 'text-[#F8FAFC]' : 'text-[#94A3B8]/60'
+                    isCompleted || isProcessing ? 'text-slate-900' : 'text-slate-400'
                   }`}>
                     {step.name}
                   </h4>
-                  <p className={`text-xs ${
-                    isProcessing ? 'text-indigo-300 font-mono' : 'text-[#94A3B8]'
-                  }`}>
-                    {step.description}
-                  </p>
+                  <AnimatePresence mode="wait">
+                    <motion.p 
+                      key={step.description}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className={`text-xs ${
+                        isProcessing ? 'text-blue-600 font-medium' : 'text-slate-500'
+                      }`}
+                    >
+                      {step.description}
+                    </motion.p>
+                  </AnimatePresence>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Dynamic Status Text Footer */}
-        <div className="text-center pt-4 border-t border-[#2E3B52]/40">
-          <p className="text-xs font-mono text-[#94A3B8] animate-pulse">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center pt-6 mt-6 border-t border-slate-100"
+        >
+          <p className="text-xs font-semibold text-slate-400 animate-pulse">
             {getDynamicStatusText()}
           </p>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

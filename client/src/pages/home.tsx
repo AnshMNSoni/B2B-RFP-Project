@@ -255,7 +255,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/20 selection:text-blue-900 relative">
+      {/* Decorative Light Background Elements */}
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
+      
       {/* Header Bar */}
       <Header phase={phase} onNewRfp={resetAll} />
 
@@ -292,35 +295,35 @@ export default function Home() {
           <div className="w-full max-w-3xl mx-auto space-y-6 py-2 animate-in fade-in slide-in-from-bottom-6 duration-400">
             
             {/* Top Bar: Action Buttons & View Mode Toggle (Deck vs Full View) */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#2E3B52]/60">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
               <div>
-                <h2 className="text-lg font-extrabold text-[#F8FAFC] tracking-tight">RFP Commercial Quotation</h2>
-                <p className="text-xs text-[#94A3B8] font-mono">AI Commercial Draft — Subject to Technical Engineering Sign-off</p>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">RFP Commercial Quotation</h2>
+                <p className="text-sm text-slate-500 font-medium mt-1">AI Commercial Draft — Subject to Technical Engineering Sign-off</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Mode Switcher Toggle */}
-                <div className="flex items-center bg-[#151D2A] border border-[#2E3B52] rounded-xl p-1">
+                <div className="flex items-center bg-slate-100/80 border border-slate-200 rounded-xl p-1 shadow-inner">
                   <button
                     onClick={() => setViewMode('deck')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                       viewMode === 'deck'
-                        ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)]'
-                        : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                        ? 'bg-white text-blue-700 shadow-sm border border-slate-200/60'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                     }`}
                   >
-                    <Layers className="w-3.5 h-3.5" />
+                    <Layers className="w-4 h-4" />
                     Guided Deck View
                   </button>
                   <button
                     onClick={() => setViewMode('full')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                       viewMode === 'full'
-                        ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)]'
-                        : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                        ? 'bg-white text-blue-700 shadow-sm border border-slate-200/60'
+                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                     }`}
                   >
-                    <LayoutList className="w-3.5 h-3.5" />
+                    <LayoutList className="w-4 h-4" />
                     Full View
                   </button>
                 </div>
@@ -330,17 +333,17 @@ export default function Home() {
                   onClick={() => exportToCsv(result, transformedSummary)}
                   variant="outline"
                   size="sm"
-                  className="bg-[#151D2A] border-[#2E3B52] text-[#F8FAFC] hover:bg-[#1C2638] text-xs font-mono"
+                  className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-700 text-sm font-semibold shadow-sm"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5 text-sky-400" />
+                  <FileSpreadsheet className="w-4 h-4 mr-2 text-green-600" />
                   Excel (.xlsx)
                 </Button>
                 <Button
                   onClick={() => exportToPdf(result, transformedSummary)}
                   size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-[0_4px_14px_0_rgba(37,99,235,0.25)]"
                 >
-                  <FileText className="w-3.5 h-3.5 mr-1.5" />
+                  <FileText className="w-4 h-4 mr-2" />
                   Export PDF
                 </Button>
               </div>
@@ -369,10 +372,10 @@ export default function Home() {
                 {activeStep === 2 && (
                   <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">
+                      <h3 className="text-lg font-bold text-slate-900 tracking-tight">
                         Ranked SKU Matches ({result.matches.length} SKUs Identified)
                       </h3>
-                      <span className="text-xs font-mono text-indigo-400">Master Catalog Evaluated</span>
+                      <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded-md">Master Catalog Evaluated</span>
                     </div>
                     <div className="space-y-4">
                       {result.matches.map((match, index) => (
@@ -437,7 +440,7 @@ export default function Home() {
 
                 {/* Card 2 — SKU Match Results */}
                 <div className="space-y-4">
-                  <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">
+                  <h3 className="text-lg font-bold text-slate-900 tracking-tight border-b border-slate-100 pb-2">
                     Ranked SKU Matches
                   </h3>
                   <div className="space-y-4">
