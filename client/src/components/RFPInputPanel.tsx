@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, FileText, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RFPInputPanelProps {
   rfpText: string;
@@ -118,115 +119,151 @@ export default function RFPInputPanel({
   };
 
   return (
-    <Card className="w-full border border-[#2E3B52] bg-[#1C2638] shadow-2xl rounded-2xl overflow-hidden" data-testid="card-rfp-input">
-      <CardContent className="p-6 md:p-8 space-y-6">
-        {/* Load Sample Presets & File Upload Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2E3B52]/60 pb-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono text-[#94A3B8] mr-1">Load Sample:</span>
-            {PRESETS.map((preset) => (
-              <button
-                key={preset.name}
-                type="button"
-                onClick={() => {
-                  setUploadStatus(null);
-                  setUploadError(null);
-                  onLoadPreset(preset.text);
-                }}
-                className="px-3 py-1.5 text-xs font-mono text-[#94A3B8] hover:text-[#F8FAFC] bg-[#151D2A] hover:bg-[#151D2A]/80 border border-[#2E3B52] hover:border-[#6366F1]/60 rounded-lg transition-all"
-              >
-                {preset.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Upload Button */}
-          <div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
-              accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt"
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="h-8 text-xs font-mono text-[#F8FAFC] bg-[#151D2A] border-[#2E3B52] hover:border-[#6366F1]/60 hover:bg-[#151D2A]"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-[#6366F1]" />
-                  Extracting...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-3.5 h-3.5 mr-1.5 text-[#6366F1]" />
-                  Upload File (PDF, DOCX, XLSX)
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-
-        {/* Upload Status Badge */}
-        {uploadStatus && (
-          <div className="flex items-center gap-2 p-2.5 bg-[#151D2A] border border-[#6366F1]/40 rounded-xl text-xs font-mono text-indigo-300 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 text-[#6366F1] shrink-0" />
-            <span className="truncate">Uploaded & Extracted: <strong>{uploadStatus.filename}</strong> ({uploadStatus.fileType})</span>
-          </div>
-        )}
-
-        {/* Upload Error Badge */}
-        {uploadError && (
-          <div className="flex items-center gap-2 p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs font-mono text-rose-300 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{uploadError}</span>
-          </div>
-        )}
-
-        {/* Textarea Drop Zone */}
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`relative rounded-xl transition-all ${
-            isDragging ? 'ring-2 ring-[#6366F1] bg-[#6366F1]/5' : ''
-          }`}
-        >
-          {isDragging && (
-            <div className="absolute inset-0 z-20 bg-[#1C2638]/90 border-2 border-dashed border-[#6366F1] rounded-xl flex items-center justify-center text-center p-4">
-              <div className="space-y-1">
-                <FileText className="w-8 h-8 text-[#6366F1] mx-auto animate-bounce" />
-                <p className="text-sm font-semibold text-[#F8FAFC]">Drop RFP document here to extract</p>
-                <p className="text-xs font-mono text-[#94A3B8]">Supports PDF, Word, Excel, and Text files</p>
-              </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <Card className="w-full border border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl overflow-hidden" data-testid="card-rfp-input">
+        <CardContent className="p-6 md:p-8 space-y-6">
+          {/* Load Sample Presets & File Upload Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-slate-500 mr-1 uppercase tracking-wider">Load Sample:</span>
+              {PRESETS.map((preset, i) => (
+                <motion.div key={preset.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadStatus(null);
+                      setUploadError(null);
+                      onLoadPreset(preset.text);
+                    }}
+                    className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-blue-700 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-lg transition-all shadow-sm"
+                  >
+                    {preset.name}
+                  </button>
+                </motion.div>
+              ))}
             </div>
-          )}
 
-          <Textarea
-            value={rfpText}
-            onChange={(e) => onRfpTextChange(e.target.value)}
-            placeholder="Paste your RFP text here, select a preset, or drag & drop a PDF / Word / Excel document..."
-            className="h-64 font-mono text-xs leading-relaxed bg-[#0B0F17]/70 border border-[#2E3B52]/80 focus:border-[#6366F1] focus:ring-0 text-[#F8FAFC] placeholder:text-[#94A3B8]/60 rounded-xl resize-none p-4"
-            data-testid="input-rfp-text"
-          />
-        </div>
+            {/* Upload Button */}
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={(e) => e.target.files && handleFileUpload(e.target.files[0])}
+                accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt"
+                className="hidden"
+              />
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="h-8 text-xs font-medium text-slate-700 bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 shadow-sm transition-all"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin text-blue-600" />
+                      Extracting...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                      Upload File (PDF, DOCX, XLSX)
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+          </div>
 
-        {/* Process RFP Button */}
-        <Button
-          onClick={onProcess}
-          disabled={isProcessing || isUploading || !rfpText.trim()}
-          className="w-full h-12 bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-medium text-sm rounded-xl cta-indigo-glow border border-indigo-400/20"
-          data-testid="button-process-rfp"
-        >
-          Process RFP with AI
-        </Button>
-      </CardContent>
-    </Card>
+
+          {/* Upload Status Badge */}
+          <AnimatePresence>
+            {uploadStatus && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs font-medium text-blue-800"
+              >
+                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                <span className="truncate">Uploaded & Extracted: <strong>{uploadStatus.filename}</strong> ({uploadStatus.fileType})</span>
+              </motion.div>
+            )}
+
+            {/* Upload Error Badge */}
+            {uploadError && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-medium text-red-800"
+              >
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <span>{uploadError}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Textarea Drop Zone */}
+          <motion.div
+            animate={{ scale: isDragging ? 1.01 : 1 }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative rounded-xl transition-all duration-300 ${
+              isDragging ? 'ring-2 ring-blue-500 bg-blue-50/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : ''
+            }`}
+          >
+            <AnimatePresence>
+              {isDragging && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-20 bg-white/90 backdrop-blur-sm border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center text-center p-4"
+                >
+                  <div className="space-y-2">
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    >
+                      <FileText className="w-10 h-10 text-blue-500 mx-auto" />
+                    </motion.div>
+                    <p className="text-sm font-semibold text-slate-800">Drop RFP document here to extract</p>
+                    <p className="text-xs font-medium text-slate-500">Supports PDF, Word, Excel, and Text files</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Textarea
+              value={rfpText}
+              onChange={(e) => onRfpTextChange(e.target.value)}
+              placeholder="Paste your RFP text here, select a preset, or drag & drop a PDF / Word / Excel document..."
+              className="h-64 font-mono text-sm leading-relaxed bg-slate-50/50 border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 text-slate-800 placeholder:text-slate-400 rounded-xl resize-none p-5 transition-all shadow-inner"
+              data-testid="input-rfp-text"
+            />
+          </motion.div>
+
+          {/* Process RFP Button */}
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={onProcess}
+              disabled={isProcessing || isUploading || !rfpText.trim()}
+              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] border-none transition-all"
+              data-testid="button-process-rfp"
+            >
+              Process RFP with AI
+            </Button>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 

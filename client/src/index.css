@@ -3,19 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --background: 222 35% 7%; /* #0B0F17 Obsidian */
-
-  --foreground: 210 40% 98%; /* #F8FAFC Off-white */
-  --border: 218 28% 25%; /* #2E3B52 Steel Border */
-  --card: 218 33% 16%; /* #1C2638 Card Surface */
-  --card-foreground: 210 40% 98%;
-  --primary: 239 84% 67%; /* #6366F1 Electric Indigo */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 218 31% 12%; /* #151D2A Row Tint */
-  --secondary-foreground: 210 40% 98%;
-  --muted: 218 28% 16%;
-  --muted-foreground: 215 16% 65%; /* #94A3B8 Muted Slate */
-  --accent: 239 84% 67%;
+  --background: 210 40% 98%; /* #F8FAFC Off-white */
+  --foreground: 222 47% 11%; /* #0F172A Slate 900 */
+  --border: 214 32% 91%; /* #E2E8F0 Slate 200 */
+  --card: 0 0% 100%; /* #FFFFFF White */
+  --card-foreground: 222 47% 11%;
+  --primary: 221 83% 53%; /* #2563EB Blue 600 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 210 40% 96%; /* #F1F5F9 Slate 100 */
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%; /* #64748B Slate 500 */
+  --accent: 221 83% 53%;
   --accent-foreground: 0 0% 100%;
   --radius: 0.75rem;
   --font-sans: 'Inter', 'IBM Plex Sans', sans-serif;
@@ -40,7 +39,7 @@
 
 @layer base {
   body {
-    @apply bg-[#0B0F17] text-[#F8FAFC] font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-blue-500/30 selection:text-blue-900;
   }
 }
 
