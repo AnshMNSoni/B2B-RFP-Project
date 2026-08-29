@@ -120,7 +120,7 @@ export default function Home() {
     setError(null);
     setPhase('processing');
 
-    // Reset steps
+    // Reset steps to initial state
     setSteps([
       { id: 'sales', name: 'Sales Agent', description: 'Extracting RFP requirements...', status: 'processing' },
       { id: 'technical', name: 'Technical Agent', description: 'Matching SKUs & spec extraction...', status: 'pending' },
@@ -128,46 +128,102 @@ export default function Home() {
     ]);
 
     try {
-      // Step 1: Sales Agent
-      await new Promise(r => setTimeout(r, 600));
-      setSteps([
-        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
-        { id: 'technical', name: 'Technical Agent', description: 'Matching SKUs & spec extraction...', status: 'processing' },
-        { id: 'pricing', name: 'Pricing Agent', description: 'Calculating financial costs & LME surcharges...', status: 'pending' },
-      ]);
+      // 1. Try real-time streaming endpoint from Python LangGraph backend
+      let streamSucceeded = false;
+      try {
+        const streamRes = await fetch('/api/process-rfp/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rfpText }),
+        });
 
-      // Step 2: Technical Agent
-      await new Promise(r => setTimeout(r, 700));
-      setSteps([
-        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
-        { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
-        { id: 'pricing', name: 'Pricing Agent', description: 'Calculating financial costs & LME surcharges...', status: 'processing' },
-      ]);
+        if (streamRes.ok && streamRes.body) {
+          const reader = streamRes.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
 
-      // Step 3: Pricing Agent API Call
-      const res = await fetch('/api/process-rfp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rfpText }),
-      });
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to process RFP request');
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data:')) {
+                const jsonStr = trimmed.replace(/^data:\s*/, '');
+                try {
+                  const eventData = JSON.parse(jsonStr);
+
+                  if (eventData.event === 'node_completed') {
+                    if (eventData.node === 'sales_agent') {
+                      setSteps([
+                        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
+                        { id: 'technical', name: 'Technical Agent', description: 'Matching SKUs & spec extraction...', status: 'processing' },
+                        { id: 'pricing', name: 'Pricing Agent', description: 'Calculating financial costs & LME surcharges...', status: 'pending' },
+                      ]);
+                    } else if (eventData.node === 'technical_agent') {
+                      setSteps([
+                        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
+                        { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
+                        { id: 'pricing', name: 'Pricing Agent', description: 'Calculating financial costs & LME surcharges...', status: 'processing' },
+                      ]);
+                    } else if (eventData.node === 'pricing_agent') {
+                      setSteps([
+                        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
+                        { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
+                        { id: 'pricing', name: 'Pricing Agent', description: 'Calculated final quote & forex surcharge.', status: 'completed' },
+                      ]);
+                    }
+                  } else if (eventData.event === 'complete' && eventData.result) {
+                    setSteps([
+                      { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
+                      { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
+                      { id: 'pricing', name: 'Pricing Agent', description: 'Calculated final quote & forex surcharge.', status: 'completed' },
+                    ]);
+                    setResult(eventData.result);
+                    setActiveStep(1);
+                    setPhase('results');
+                    streamSucceeded = true;
+                  } else if (eventData.event === 'error') {
+                    throw new Error(eventData.error || 'Agent execution encountered an error');
+                  }
+                } catch (e: any) {
+                  if (eventData?.event === 'error') throw e;
+                }
+              }
+            }
+          }
+        }
+      } catch (streamErr) {
+        console.warn('Streaming failed or not supported, falling back to standard API:', streamErr);
       }
 
-      const data: RFPResponse = await res.json();
+      // 2. Fallback to standard blocking POST if stream did not deliver final result
+      if (!streamSucceeded) {
+        const res = await fetch('/api/process-rfp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rfpText }),
+        });
 
-      setSteps([
-        { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
-        { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
-        { id: 'pricing', name: 'Pricing Agent', description: 'Calculated final quote & forex surcharge.', status: 'completed' },
-      ]);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || errorData.message || 'Failed to process RFP request');
+        }
 
-      await new Promise(r => setTimeout(r, 400));
-      setResult(data);
-      setActiveStep(1);
-      setPhase('results');
+        const data: RFPResponse = await res.json();
+        setSteps([
+          { id: 'sales', name: 'Sales Agent', description: 'Extracted specifications successfully.', status: 'completed' },
+          { id: 'technical', name: 'Technical Agent', description: 'Matched 25+ catalog SKUs successfully.', status: 'completed' },
+          { id: 'pricing', name: 'Pricing Agent', description: 'Calculated final quote & forex surcharge.', status: 'completed' },
+        ]);
+        setResult(data);
+        setActiveStep(1);
+        setPhase('results');
+      }
     } catch (err: any) {
       console.error('Error processing RFP:', err);
       setError(err.message || 'An error occurred while communicating with AI Agents.');

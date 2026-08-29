@@ -15,12 +15,36 @@ The application follows a three-agent workflow with AI-enhanced intelligence:
 
 ## Key Features
 
-- **AI-Powered Processing** - Leverages Google Gemini Pro for intelligent document understanding
+- **AI-Powered Processing** - Leverages Google Gemini & Groq Llama 3.3 for intelligent document understanding
 - **Smart SKU Matching** - AI evaluates technical compatibility beyond simple keyword matching
 - **Intelligent Pricing** - Context-aware quantity recommendations and pricing strategies
 - **Fallback Logic** - Graceful degradation to rule-based processing if AI is unavailable
 - **Fast Processing** - Typical RFP processing in 10-15 seconds
 - **High Accuracy** - AI reasoning provides transparency in matching and pricing decisions
+
+---
+
+## 🚀 Architecture Scale & Migration Roadmap (Python + LangGraph)
+
+We are upgrading the backend architecture from a linear TypeScript pipeline to a stateful, cyclic **Python (FastAPI + LangGraph)** multi-agent system.
+
+### Key Upgrades & Loophole Fixes:
+1. **Dynamic Multi-Agent Graph (`LangGraph StateGraph`)**:
+   - Replaces linear waterfall execution with cyclic state graphs, reflection loops, and self-correction.
+   - Built-in conditional routing for incomplete specifications and low-confidence catalog matches.
+2. **Real-Time Streaming (SSE)**:
+   - Replaces monolithic blocking requests and simulated frontend delays with live **Server-Sent Events (SSE)**.
+   - React UI reflects true step-by-step agent transitions as they execute in the graph.
+3. **Pydantic Structured Outputs**:
+   - Eliminates fragile regex/`JSON.parse` failures by enforcing strict schema validation and auto-healing retries with Groq (`llama-3.3-70b`) & Gemini (`gemini-2.0-flash`).
+4. **Pre-Indexed Vector Store (ChromaDB / FAISS)**:
+   - Indexes product catalogs at server startup to enable instant $O(1)$ semantic + attribute filtering, eliminating per-request catalog embedding overhead.
+5. **Robust Document Extraction**:
+   - Python-native document parsing (`pypdf`, `python-docx`, `openpyxl`) with table structure preservation and memory-safe streaming uploads for cloud deployments (Render).
+6. **State Checkpointing & History**:
+   - Persistent thread sessions using LangGraph checkpointers for multi-turn quotes, auditability, and quote iteration.
+
+---
 
 ## AI & ML Integration
 
@@ -405,16 +429,18 @@ Response:
 - **Free Tier Capacity**: ~500 RFPs per day
 - **Fallback Performance**: <1 second (rule-based processing)
 
-## Future Enhancements
-
-- [ ] Multi-document processing (PDFs, Word docs)
-- [ ] Real-time collaboration features
-- [ ] Advanced analytics dashboard
-- [ ] Custom SKU catalog management
-- [ ] Email integration for automatic RFP ingestion
-- [ ] Multi-language support
-- [ ] Historical RFP analysis and insights
-- [ ] Integration with ERP systems
+## Future Enhancements & Scale Plan
+ 
+- [x] Multi-agent orchestration with Groq Llama 3.3 & Gemini fallback
+- [x] Hugging Face semantic vector embedding matching
+- [x] Factory Drum Reel batch packaging & scrap elimination engine
+- [x] AI Value engineering & conductor alternative recommendations
+- [x] Interactive risk analysis charts & PDF/CSV export
+- [ ] **Python + LangGraph StateGraph Migration** (Underway on `scale` branch)
+- [ ] **Server-Sent Events (SSE) Live Graph Streaming**
+- [ ] **Pre-indexed ChromaDB/FAISS Vector Catalog Store**
+- [ ] Multi-document batch processing (tender packages, annexures)
+- [ ] Historical RFP quote comparison & ERP export integration
 
 ## Troubleshooting
 

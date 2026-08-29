@@ -1,20 +1,9 @@
 services:
   - type: web
     name: rfp-agent-ai
-    env: node
+    env: docker
     plan: free
     region: oregon
-
-    buildCommand: |
-      npm install --include=dev
-      npm run build
-      echo "Build completed. Checking directories:"
-      ls -la
-      ls -la dist
-      ls -la dist/public
-
-    startCommand: npm start
-
-    envVars:
-      - key: NODE_ENV
-        value: production
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
